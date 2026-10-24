@@ -3,7 +3,12 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import type { Activity } from '@/entities/activity'
 import { mapboxToken } from '@/shared/config/mapbox'
-import { RideMap, Starfield } from '@/widgets/ride-map'
+import {
+  MapCameraBar,
+  type RideMapCamera,
+  RideMap,
+  Starfield,
+} from '@/widgets/ride-map'
 import { PageSwitch } from './page-switch'
 import { RideDetail } from './ride-detail'
 import { RideExplorer } from './ride-explorer'
@@ -17,6 +22,7 @@ type HomeDeckProps = {
 export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
+  const [camera, setCamera] = useState<RideMapCamera | null>(null)
   const [detail, setDetail] = useState<{
     activity: Activity
     occurrences: Activity[]
@@ -97,11 +103,10 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
             activities={activities}
             locale={locale}
             token={mapboxToken()}
+            brand={brand}
             onSelect={openDetail}
+            onCameraReady={setCamera}
           />
-          <div className='pointer-events-none absolute top-4 left-4 z-10'>
-            {brand}
-          </div>
         </section>
         <section
           data-data-page
@@ -114,12 +119,21 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
           />
         </section>
       </div>
-      <PageSwitch
-        page={page}
-        pageCount={2}
-        onPrevious={() => scrollToPage(Math.max(0, page - 1))}
-        onNext={() => scrollToPage(Math.min(1, page + 1))}
-      />
+      <div className='pointer-events-none fixed inset-x-4 bottom-4 z-30 flex items-center justify-between'>
+        <PageSwitch
+          page={page}
+          pageCount={2}
+          onPrevious={() => scrollToPage(Math.max(0, page - 1))}
+          onNext={() => scrollToPage(Math.min(1, page + 1))}
+        />
+        {page === 0 && camera ? (
+          <MapCameraBar
+            onZoomIn={camera.zoomIn}
+            onZoomOut={camera.zoomOut}
+            onLocate={camera.locate}
+          />
+        ) : null}
+      </div>
       {detail && (
         <RideDetail
           activity={detail.activity}

@@ -25,7 +25,7 @@ export function PageSwitch({
 
   return (
     <nav
-      className='pointer-events-auto fixed bottom-4 left-4 z-30'
+      className='pointer-events-auto'
       aria-label={page === 0 ? t('next') : t('previous')}
     >
       <div className={pill}>

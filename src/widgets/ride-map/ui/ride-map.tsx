@@ -4,7 +4,14 @@ import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl from 'mapbox-gl'
 import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   type Activity,
   activitiesToGeoJson,
@@ -16,18 +23,33 @@ import {
   mapLanguage,
 } from '@/shared/config/mapbox'
 import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
-import { MapCameraBar, MapToolbar } from './map-toolbar'
+import { MapToolbar } from './map-toolbar'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import './mapbox.css'
+
+export type RideMapCamera = {
+  zoomIn: () => void
+  zoomOut: () => void
+  locate: () => void
+}
 
 type RideMapProps = {
   activities: Activity[]
   locale: string
   token: string
+  brand?: ReactNode
   onSelect?: (activity: Activity) => void
+  onCameraReady?: (camera: RideMapCamera | null) => void
 }
 
-export function RideMap({ activities, locale, token, onSelect }: RideMapProps) {
+export function RideMap({
+  activities,
+  locale,
+  token,
+  brand,
+  onSelect,
+  onCameraReady,
+}: RideMapProps) {
   const t = useTranslations('map')
   const { resolvedTheme } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -163,6 +185,19 @@ export function RideMap({ activities, locale, token, onSelect }: RideMapProps) {
     })
   }, [stopSpin])
 
+  useEffect(() => {
+    if (!token) {
+      onCameraReady?.(null)
+      return
+    }
+    onCameraReady?.({
+      zoomIn: () => zoomBy(1),
+      zoomOut: () => zoomBy(-1),
+      locate,
+    })
+    return () => onCameraReady?.(null)
+  }, [locate, onCameraReady, token, zoomBy])
+
   const toggleProjection = useCallback(() => {
     const map = mapRef.current
     if (!map || !mapReady || isTransitioning) return
@@ -207,21 +242,17 @@ export function RideMap({ activities, locale, token, onSelect }: RideMapProps) {
           {t('missingToken')}
         </div>
       )}
-      <MapToolbar
-        showMapTools={Boolean(token)}
-        isGlobe={isGlobe}
-        isRotating={isRotating}
-        isTransitioning={isTransitioning}
-        onToggleProjection={toggleProjection}
-        onToggleRotate={() => setIsRotating((current) => !current)}
-      />
-      {token ? (
-        <MapCameraBar
-          onZoomIn={() => zoomBy(1)}
-          onZoomOut={() => zoomBy(-1)}
-          onLocate={locate}
+      <div className='pointer-events-none absolute inset-x-4 top-4 z-20 flex items-center justify-between'>
+        {brand}
+        <MapToolbar
+          showMapTools={Boolean(token)}
+          isGlobe={isGlobe}
+          isRotating={isRotating}
+          isTransitioning={isTransitioning}
+          onToggleProjection={toggleProjection}
+          onToggleRotate={() => setIsRotating((current) => !current)}
         />
-      ) : null}
+      </div>
     </div>
   )
 }

@@ -39,7 +39,7 @@ export function MapToolbar({
   const t = useTranslations('map')
 
   return (
-    <div className='pointer-events-auto absolute top-4 right-4 z-20 max-md:top-auto max-md:right-auto max-md:bottom-4 max-md:left-1/2 max-md:-translate-x-1/2'>
+    <div className='pointer-events-auto'>
       <div className={`${pill} px-5 py-3`}>
         {showMapTools && (
           <>
@@ -98,7 +98,7 @@ export function MapCameraBar({
   const t = useTranslations('map')
 
   return (
-    <div className='pointer-events-auto absolute right-4 bottom-4 z-20'>
+    <div className='pointer-events-auto'>
       <div className={`${pill} flex-col px-3 py-4`}>
         <button
           type='button'

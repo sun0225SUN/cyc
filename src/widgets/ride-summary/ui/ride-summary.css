@@ -1,3 +1,39 @@
+.ride-summary-period {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-width: 0;
+  margin-right: 0.5rem;
+  transition:
+    grid-template-columns 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin-right 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ride-summary-period:last-child {
+  margin-right: 0;
+}
+
+.ride-summary-period[data-collapsed="true"] {
+  grid-template-columns: 0fr;
+  margin-right: 0;
+}
+
+.ride-summary-period > * {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ride-summary-period[data-collapsed="true"] .ride-summary-tab {
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.86);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ride-summary-period {
+    transition: none;
+  }
+}
+
 .ride-summary-tab {
   border-color: color-mix(in oklab, var(--color-ride) 22%, var(--border));
 }

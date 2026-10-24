@@ -43,7 +43,7 @@ export function RideSummary({
   yearTabs,
 }: RideSummaryProps) {
   const t = useTranslations('summary')
-  const [period, setPeriod] = useState<SummaryGrain>('year')
+  const [period, setPeriod] = useState<SummaryGrain>('month')
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
   const spanYears = selectedYear === 'all'
   const periods = spanYears
@@ -95,19 +95,32 @@ export function RideSummary({
         </header>
 
         <section className='mt-8 overflow-hidden rounded-2xl border bg-white/40 p-5 backdrop-blur-xs md:p-7 dark:bg-white/2.5'>
-          <fieldset className='flex flex-wrap gap-2 border-0 p-0'>
+          <fieldset className='ride-summary-periods flex flex-wrap items-center border-0 p-0'>
             <legend className='sr-only'>{t('period')}</legend>
-            {periods.map((value) => (
-              <button
-                type='button'
-                key={value}
-                aria-pressed={activePeriod === value}
-                onClick={() => setPeriod(value)}
-                className='ride-summary-tab cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-[color,background-color,border-color,transform,opacity] active:scale-95'
-              >
-                {t(value)}
-              </button>
-            ))}
+            {PERIODS.map((value) => {
+              const hidden = value === 'year' && !spanYears
+              return (
+                <div
+                  key={value}
+                  data-collapsed={hidden}
+                  className='ride-summary-period'
+                >
+                  <div>
+                    <button
+                      type='button'
+                      disabled={hidden}
+                      aria-hidden={hidden}
+                      tabIndex={hidden ? -1 : 0}
+                      aria-pressed={activePeriod === value}
+                      onClick={() => setPeriod(value)}
+                      className='ride-summary-tab cursor-pointer rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,transform,opacity] active:scale-95'
+                    >
+                      {t(value)}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </fieldset>
           <dl className='mt-8 grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4'>
             <Stat label={t('rides')} value={String(stats.count)} />

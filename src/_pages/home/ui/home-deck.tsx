@@ -17,7 +17,21 @@ type HomeDeckProps = {
 export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
-  const [detail, setDetail] = useState<Activity | null>(null)
+  const [detail, setDetail] = useState<{
+    activity: Activity
+    occurrences: Activity[]
+  } | null>(null)
+
+  const openDetail = useCallback(
+    (activity: Activity, occurrences?: Activity[]) => {
+      setDetail({
+        activity,
+        occurrences:
+          occurrences && occurrences.length > 0 ? occurrences : [activity],
+      })
+    },
+    [],
+  )
 
   useEffect(() => {
     const scroller = scrollerRef.current
@@ -83,7 +97,7 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
             activities={activities}
             locale={locale}
             token={mapboxToken()}
-            onSelect={setDetail}
+            onSelect={openDetail}
           />
           <div className='pointer-events-none absolute top-4 left-4 z-10'>
             {brand}
@@ -96,7 +110,7 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
           <RideExplorer
             activities={activities}
             locale={locale}
-            onSelect={setDetail}
+            onSelect={openDetail}
           />
         </section>
       </div>
@@ -108,9 +122,13 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
       />
       {detail && (
         <RideDetail
-          activity={detail}
+          activity={detail.activity}
+          occurrences={detail.occurrences}
           locale={locale}
           token={mapboxToken()}
+          onSelectOccurrence={(activity) =>
+            setDetail({ activity, occurrences: detail.occurrences })
+          }
           onBack={() => setDetail(null)}
         />
       )}

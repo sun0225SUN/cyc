@@ -5,24 +5,36 @@ import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import { type Activity, activityNameKey } from '@/entities/activity'
 import { RideRoutePreview } from './ride-route-preview'
+import './year-tabs.css'
 
 type RideDetailProps = {
   activity: Activity
+  occurrences?: Activity[]
   locale: string
   token: string
+  onSelectOccurrence?: (activity: Activity) => void
   onBack: () => void
+}
+
+function localDate(activity: Activity) {
+  return new Date(`${activity.start_date_local.replace(' ', 'T')}Z`)
 }
 
 export function RideDetail({
   activity,
+  occurrences = [activity],
   locale,
   token,
+  onSelectOccurrence,
   onBack,
 }: RideDetailProps) {
   const t = useTranslations('rideDetail')
   const activityNames = useTranslations('activityNames')
-  const nameKey = activityNameKey(activity.name)
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
+  const formatName = (name: string) => {
+    const key = activityNameKey(name)
+    return key ? activityNames(key) : name || t('untitled')
+  }
   const metrics = [
     {
       label: t('distance'),
@@ -81,17 +93,13 @@ export function RideDetail({
                 dateStyle: 'long',
                 timeStyle: 'short',
                 timeZone: 'UTC',
-              }).format(
-                new Date(`${activity.start_date_local.replace(' ', 'T')}Z`),
-              )}
+              }).format(localDate(activity))}
             </p>
             <h1
               id='ride-detail-title'
               className='mt-3 text-4xl font-medium tracking-tight md:text-5xl'
             >
-              {nameKey
-                ? activityNames(nameKey)
-                : activity.name || t('untitled')}
+              {formatName(activity.name)}
             </h1>
             <div className='text-muted-foreground mt-4 flex flex-wrap items-center gap-4 text-sm'>
               <span>{activity.subtype || activity.type}</span>
@@ -102,6 +110,22 @@ export function RideDetail({
                 </span>
               )}
             </div>
+            {occurrences.length > 1 && (
+              <fieldset className='year-tabs mt-5 flex flex-wrap gap-2 border-0 p-0'>
+                <legend className='sr-only'>{t('eachTime')}</legend>
+                {occurrences.map((ride) => (
+                  <button
+                    type='button'
+                    key={ride.run_id}
+                    onClick={() => onSelectOccurrence?.(ride)}
+                    aria-pressed={ride.run_id === activity.run_id}
+                    className='year-tab cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-[color,background-color,border-color,transform] active:scale-95'
+                  >
+                    {formatName(ride.name)}
+                  </button>
+                ))}
+              </fieldset>
+            )}
           </header>
 
           <section className='mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>

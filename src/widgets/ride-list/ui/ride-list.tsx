@@ -2,7 +2,14 @@
 
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { type Activity, activityNameKey } from '@/entities/activity'
 import { formatActivityDate } from '../model/format-activity-date'
 import { formatMovingTime } from '../model/format-moving-time'
@@ -13,6 +20,7 @@ type RideListProps = {
   activities: Activity[]
   locale: string
   selectedDate?: string | null
+  yearTabs?: ReactNode
   onSelect?: (activity: Activity) => void
 }
 
@@ -20,6 +28,7 @@ export function RideList({
   activities,
   locale,
   selectedDate,
+  yearTabs,
   onSelect,
 }: RideListProps) {
   const t = useTranslations('rides')
@@ -79,13 +88,13 @@ export function RideList({
 
   return (
     <div ref={scrollerRef} className='scrollbar-gutter-stable'>
-      <div className='mx-auto flex w-full max-w-6xl flex-col px-6 pt-8 pb-24 md:px-10'>
-        <header className='shrink-0'>
-          <div className='flex flex-wrap items-end justify-between gap-3'>
+      <div className='mx-auto flex w-full max-w-6xl flex-col px-6 pt-8 pb-8 md:px-10'>
+        <header className='flex flex-wrap items-end justify-between gap-5'>
+          <div>
             <h1 className='text-3xl font-medium tracking-tight'>
               {t('title')}
             </h1>
-            <p className='text-muted-foreground pb-1 text-sm tabular-nums'>
+            <p className='text-muted-foreground mt-2 text-sm tabular-nums'>
               {t('showing', {
                 first: firstRow,
                 last: lastRow,
@@ -93,6 +102,7 @@ export function RideList({
               })}
             </p>
           </div>
+          {yearTabs}
         </header>
 
         <div className='mt-8 overflow-x-auto rounded-2xl border bg-white/40 dark:bg-white/2.5'>

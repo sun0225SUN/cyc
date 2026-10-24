@@ -1,0 +1,42 @@
+.ride-tracks {
+  --track-color: #2563eb;
+}
+
+.dark .ride-tracks {
+  --track-color: #fb923c;
+}
+
+.ride-tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 80px);
+  justify-content: start;
+  gap: 0.5rem;
+}
+
+.ride-tracks-thumb {
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.ride-tracks-path {
+  stroke: var(--track-color);
+  stroke-width: 1.5;
+  opacity: 0.42;
+  transition:
+    opacity 0.28s ease,
+    stroke-width 0.28s ease;
+}
+
+.ride-tracks-thumb:hover .ride-tracks-path {
+  opacity: 0.72;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ride-tracks-path {
+    transition: none;
+  }
+}

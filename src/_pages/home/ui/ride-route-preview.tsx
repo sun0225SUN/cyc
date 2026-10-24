@@ -9,9 +9,56 @@ import { type Activity, activitiesToGeoJson } from '@/entities/activity'
 import { mapboxStyles } from '@/shared/config/mapbox'
 import './ride-route-preview.css'
 
+const SOURCE_ID = 'detail-ride'
+const LAYER_ID = 'detail-ride'
+const FIT = { padding: 42, maxZoom: 13 } as const
+
 type RideRoutePreviewProps = {
   activity: Activity
   token: string
+}
+
+function motionDuration() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450
+}
+
+function paintRoute(map: mapboxgl.Map, dark: boolean) {
+  if (map.getLayer(LAYER_ID)) return
+  map.addLayer({
+    id: LAYER_ID,
+    type: 'line',
+    source: SOURCE_ID,
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': dark ? '#fb923c' : '#2563eb',
+      'line-width': 4,
+      'line-opacity': 0.95,
+    },
+  })
+}
+
+function applyRoute(
+  map: mapboxgl.Map,
+  mapData: ReturnType<typeof activitiesToGeoJson>,
+  dark: boolean,
+  animate: boolean,
+) {
+  const source = map.getSource(SOURCE_ID)
+  if (source && source.type === 'geojson') {
+    source.setData(mapData.geojson)
+  } else {
+    map.addSource(SOURCE_ID, {
+      type: 'geojson',
+      data: mapData.geojson,
+    })
+    paintRoute(map, dark)
+  }
+  if (mapData.bounds) {
+    map.fitBounds(mapData.bounds, {
+      ...FIT,
+      duration: animate ? motionDuration() : 0,
+    })
+  }
 }
 
 export function RideRoutePreview({ activity, token }: RideRoutePreviewProps) {
@@ -20,47 +67,43 @@ export function RideRoutePreview({ activity, token }: RideRoutePreviewProps) {
   const t = useTranslations('map')
   const { resolvedTheme } = useTheme()
   const mapData = useMemo(() => activitiesToGeoJson([activity]), [activity])
+  const mapDataRef = useRef(mapData)
+  mapDataRef.current = mapData
   const dark = resolvedTheme === 'dark'
 
   useEffect(() => {
     const container = containerRef.current
-    if (!container || !token || !mapData.bounds) return
+    if (!container || !token) return
 
     mapboxgl.accessToken = token
+    const bounds = mapDataRef.current.bounds
     const map = new mapboxgl.Map({
       container,
       style: dark ? mapboxStyles.dark : mapboxStyles.light,
       projection: 'mercator',
-      bounds: mapData.bounds,
-      fitBoundsOptions: { padding: 42, maxZoom: 13, duration: 0 },
+      ...(bounds
+        ? { bounds, fitBoundsOptions: { ...FIT, duration: 0 } }
+        : { center: [105, 30] as [number, number], zoom: 4 }),
       interactive: true,
       attributionControl: false,
     })
     mapRef.current = map
 
     map.on('style.load', () => {
-      map.addSource('detail-ride', {
-        type: 'geojson',
-        data: mapData.geojson,
-      })
-      map.addLayer({
-        id: 'detail-ride',
-        type: 'line',
-        source: 'detail-ride',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': dark ? '#fb923c' : '#2563eb',
-          'line-width': 4,
-          'line-opacity': 0.95,
-        },
-      })
+      applyRoute(map, mapDataRef.current, dark, false)
     })
 
     return () => {
       mapRef.current = null
       map.remove()
     }
-  }, [dark, mapData, token])
+  }, [dark, token])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map?.isStyleLoaded()) return
+    applyRoute(map, mapData, dark, true)
+  }, [dark, mapData])
 
   const zoomBy = useCallback((delta: number) => {
     const map = mapRef.current
@@ -68,7 +111,7 @@ export function RideRoutePreview({ activity, token }: RideRoutePreviewProps) {
     map.easeTo({ zoom: map.getZoom() + delta, duration: 200 })
   }, [])
 
-  if (!token || !mapData.bounds) {
+  if (!token) {
     return <div className='bg-muted h-64 w-full sm:h-80' />
   }
 

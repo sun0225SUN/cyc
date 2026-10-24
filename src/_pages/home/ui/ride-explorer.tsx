@@ -2,13 +2,26 @@
 
 import { useMemo, useState } from 'react'
 import type { Activity } from '@/entities/activity'
-import { type HeatmapYear, RideHeatmap } from '@/widgets/ride-heatmap'
+import {
+  activityYears,
+  type HeatmapYear,
+  RideHeatmap,
+} from '@/widgets/ride-heatmap'
 import { RideList } from '@/widgets/ride-list'
+import { RideTracks } from '@/widgets/ride-tracks'
+import { YearTabs } from './year-tabs'
 
 type RideExplorerProps = {
   activities: Activity[]
   locale: string
-  onSelect: (activity: Activity) => void
+  onSelect: (activity: Activity, occurrences?: Activity[]) => void
+}
+
+function activitiesInYear(activities: Activity[], year: HeatmapYear) {
+  if (year === 'all') return activities
+  return activities.filter((activity) =>
+    activity.start_date_local.startsWith(String(year)),
+  )
 }
 
 export function RideExplorer({
@@ -16,46 +29,76 @@ export function RideExplorer({
   locale,
   onSelect,
 }: RideExplorerProps) {
-  const availableYears = useMemo(
-    () =>
-      new Set(
-        activities.map((activity) =>
-          Number(activity.start_date_local.slice(0, 4)),
-        ),
-      ),
-    [activities],
-  )
-  const latestYear =
-    availableYears.size > 0 ? Math.max(...availableYears) : 1970
-  const [selectedYear, setSelectedYear] = useState<HeatmapYear>(latestYear)
+  const years = useMemo(() => activityYears(activities), [activities])
+  const latestYear = years[0] ?? 1970
+  const [heatmapYear, setHeatmapYear] = useState<HeatmapYear>(latestYear)
+  const [listYear, setListYear] = useState<HeatmapYear>(latestYear)
+  const [tracksYear, setTracksYear] = useState<HeatmapYear>(latestYear)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
-  const yearActivities = useMemo(
-    () =>
-      selectedYear === 'all'
-        ? activities
-        : activities.filter((activity) =>
-            activity.start_date_local.startsWith(String(selectedYear)),
-          ),
-    [activities, selectedYear],
+  const listActivities = useMemo(
+    () => activitiesInYear(activities, listYear),
+    [activities, listYear],
   )
+  const trackActivities = useMemo(
+    () => activitiesInYear(activities, tracksYear),
+    [activities, tracksYear],
+  )
+
   return (
     <div>
       <RideHeatmap
         activities={activities}
-        selectedYear={selectedYear}
+        selectedYear={heatmapYear}
         selectedDate={selectedDate}
-        onYearChange={(year) => {
-          setSelectedYear(year)
-          setSelectedDate(null)
+        yearTabs={
+          <YearTabs
+            years={years}
+            selectedYear={heatmapYear}
+            onYearChange={(year) => {
+              setHeatmapYear(year)
+              setSelectedDate(null)
+            }}
+          />
+        }
+        onDateChange={(date) => {
+          setSelectedDate(date)
+          if (date) setListYear(Number(date.slice(0, 4)))
         }}
-        onDateChange={setSelectedDate}
       />
       <RideList
-        key={`${selectedYear}:${selectedDate ?? ''}`}
-        activities={yearActivities}
+        key={`${listYear}:${selectedDate ?? ''}`}
+        activities={listActivities}
         locale={locale}
         selectedDate={selectedDate}
+        yearTabs={
+          <YearTabs
+            years={years}
+            selectedYear={listYear}
+            onYearChange={(year) => {
+              setListYear(year)
+              if (
+                selectedDate &&
+                year !== 'all' &&
+                !selectedDate.startsWith(String(year))
+              ) {
+                setSelectedDate(null)
+              }
+            }}
+          />
+        }
+        onSelect={onSelect}
+      />
+      <RideTracks
+        activities={trackActivities}
+        locale={locale}
+        yearTabs={
+          <YearTabs
+            years={years}
+            selectedYear={tracksYear}
+            onYearChange={setTracksYear}
+          />
+        }
         onSelect={onSelect}
       />
     </div>

@@ -30,27 +30,6 @@
   background: var(--heat-color);
 }
 
-.ride-heatmap-tab {
-  border-color: color-mix(in oklab, var(--heat-color) 22%, var(--border));
-}
-
-.ride-heatmap-tab:hover {
-  border-color: color-mix(in oklab, var(--heat-color) 65%, transparent);
-  background: color-mix(in oklab, var(--heat-color) 12%, transparent);
-  color: var(--heat-color);
-}
-
-.ride-heatmap-tab[aria-pressed="true"] {
-  border-color: var(--heat-color);
-  background: var(--heat-color);
-  color: white;
-}
-
-.ride-heatmap-tab[aria-pressed="true"]:hover {
-  background: color-mix(in oklab, var(--heat-color) 88%, black);
-  color: white;
-}
-
 .ride-heatmap-cell[data-active="true"] {
   outline: 2px solid var(--heat-color);
   outline-offset: 2px;

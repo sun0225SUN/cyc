@@ -27,7 +27,7 @@
     "locate": "定位"
   },
   "rides": {
-    "title": "骑行记录",
+    "title": "活动",
     "count": "{count} 次骑行",
     "date": "日期",
     "name": "名称",
@@ -43,8 +43,15 @@
     "previous": "上一页",
     "next": "下一页"
   },
+  "tracks": {
+    "title": "轨迹",
+    "routes": "{count} 条路线",
+    "empty": "暂无轨迹数据",
+    "cluster": "×{count}",
+    "track": "{date} · {name} · {distance} 公里"
+  },
   "heatmap": {
-    "title": "骑行热力图",
+    "title": "Heatmap",
     "summary": "{count} 次骑行 · {distance} 公里",
     "yearSelection": "选择年份",
     "all": "全部",
@@ -77,6 +84,8 @@
     "distance": "距离",
     "movingTime": "移动时间",
     "averageSpeed": "平均速度",
-    "elevation": "累计爬升"
+    "elevation": "累计爬升",
+    "eachTime": "每次",
+    "eachTimeCount": "{count} 次"
   }
 }

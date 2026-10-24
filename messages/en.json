@@ -27,7 +27,7 @@
     "locate": "Locate"
   },
   "rides": {
-    "title": "Rides",
+    "title": "Activities",
     "count": "{count, plural, one {# ride} other {# rides}}",
     "date": "Date",
     "name": "Name",
@@ -43,8 +43,15 @@
     "previous": "Previous page",
     "next": "Next page"
   },
+  "tracks": {
+    "title": "Tracks",
+    "routes": "{count, plural, one {# route} other {# routes}}",
+    "empty": "No tracks found",
+    "cluster": "×{count}",
+    "track": "{date} · {name} · {distance} km"
+  },
   "heatmap": {
-    "title": "Ride heatmap",
+    "title": "Heatmap",
     "summary": "{count, plural, one {# ride} other {# rides}} · {distance} km",
     "yearSelection": "Select year",
     "all": "All",
@@ -77,6 +84,8 @@
     "distance": "Distance",
     "movingTime": "Moving time",
     "averageSpeed": "Average speed",
-    "elevation": "Elevation gain"
+    "elevation": "Elevation gain",
+    "eachTime": "Each ride",
+    "eachTimeCount": "{count, plural, one {# time} other {# times}}"
   }
 }

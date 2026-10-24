@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useMemo } from 'react'
+import { type ReactNode, useMemo } from 'react'
 import type { Activity } from '@/entities/activity'
 import {
   activityYears,
@@ -32,7 +32,7 @@ type RideHeatmapProps = {
   activities: Activity[]
   selectedYear: HeatmapYear
   selectedDate: string | null
-  onYearChange: (year: HeatmapYear) => void
+  yearTabs?: ReactNode
   onDateChange: (date: string | null) => void
 }
 
@@ -123,7 +123,7 @@ export function RideHeatmap({
   activities,
   selectedYear,
   selectedDate,
-  onYearChange,
+  yearTabs,
   onDateChange,
 }: RideHeatmapProps) {
   const t = useTranslations('heatmap')
@@ -159,20 +159,7 @@ export function RideHeatmap({
               })}
             </p>
           </div>
-          <fieldset className='flex flex-wrap gap-2 border-0 p-0'>
-            <legend className='sr-only'>{t('yearSelection')}</legend>
-            {(['all', ...years] as HeatmapYear[]).map((year) => (
-              <button
-                type='button'
-                key={year}
-                onClick={() => onYearChange(year)}
-                aria-pressed={selectedYear === year}
-                className='ride-heatmap-tab cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-[color,background-color,border-color,transform] active:scale-95'
-              >
-                {year === 'all' ? t('all') : year}
-              </button>
-            ))}
-          </fieldset>
+          {yearTabs}
         </header>
 
         <div className='mt-8 space-y-8 overflow-hidden rounded-2xl border bg-white/40 p-5 backdrop-blur-xs md:p-7 dark:bg-white/2.5'>

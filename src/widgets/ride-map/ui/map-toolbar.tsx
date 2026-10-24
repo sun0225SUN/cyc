@@ -17,7 +17,7 @@ import { cn } from '@/shared/lib/cn'
 const pill =
   'flex items-center gap-4 rounded-full bg-white/20 shadow-lg backdrop-blur-md dark:bg-black/20'
 const iconButton =
-  'cursor-pointer disabled:cursor-not-allowed disabled:opacity-40'
+  'grid size-5.5 shrink-0 place-items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-40'
 
 type MapToolbarProps = {
   showMapTools: boolean

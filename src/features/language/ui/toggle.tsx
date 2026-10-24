@@ -35,11 +35,15 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
       <PopoverTrigger
         aria-label={t('language')}
         className={cn(
-          'text-foreground inline-flex cursor-pointer border-0 bg-transparent p-0',
-          !isOpen && className,
+          'text-foreground inline-flex shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-0',
+          className,
         )}
       >
-        <Globe className='size-6' strokeWidth={2} nonScalingStroke />
+        <Globe
+          className={cn('size-6', className)}
+          strokeWidth={2}
+          nonScalingStroke
+        />
       </PopoverTrigger>
       <PopoverContent
         className={cn(

@@ -34,7 +34,10 @@ export function ThemeToggle({ strokeWidth = 2, className }: ThemeToggleProps) {
     <button
       type='button'
       onClick={toggleTheme}
-      className={cn('cursor-pointer', className)}
+      className={cn(
+        'inline-flex shrink-0 cursor-pointer items-center justify-center',
+        className,
+      )}
       aria-label='Toggle theme'
     >
       <Sun

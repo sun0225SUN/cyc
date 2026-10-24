@@ -15,6 +15,12 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
   const t = await getTranslations('site')
+  const shareImage = {
+    url: '/og-image.png',
+    width: 1200,
+    height: 630,
+    alt: t('ogImageAlt'),
+  }
 
   return {
     metadataBase: new URL(siteUrl()),
@@ -27,11 +33,13 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: t('name'),
       title: t('title'),
       description: t('description'),
+      images: [shareImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: t('title'),
       description: t('description'),
+      images: [shareImage],
     },
   }
 }

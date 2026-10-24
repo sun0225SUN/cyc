@@ -12,7 +12,9 @@ import {
 import { useTranslations } from 'next-intl'
 import { LanguageToggle } from '@/features/language'
 import { ThemeToggle } from '@/features/theme'
+import { githubRepositoryUrl } from '@/shared/config/site'
 import { cn } from '@/shared/lib/cn'
+import { GithubIcon } from '@/shared/ui/github-icon'
 
 const pill =
   'flex items-center gap-4 rounded-full bg-white/20 shadow-lg backdrop-blur-md dark:bg-black/20'
@@ -77,6 +79,15 @@ export function MapToolbar({
             </button>
           </>
         )}
+        <a
+          href={githubRepositoryUrl}
+          target='_blank'
+          rel='noopener noreferrer'
+          aria-label={t('github')}
+          className={iconButton}
+        >
+          <GithubIcon size={22} strokeWidth={2.25} nonScalingStroke />
+        </a>
         <LanguageToggle className='size-5.5' />
         <ThemeToggle className='size-5.5' strokeWidth={2.25} />
       </div>

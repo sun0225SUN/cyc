@@ -24,7 +24,8 @@
     "pause": "Pause rotation",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
-    "locate": "Locate"
+    "locate": "Locate",
+    "github": "GitHub"
   },
   "rides": {
     "title": "Activities",

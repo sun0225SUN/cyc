@@ -32,12 +32,10 @@ export function RideExplorer({
 }: RideExplorerProps) {
   const years = useMemo(() => activityYears(activities), [activities])
   const latestYear = years[0] ?? 1970
-  const currentYear = new Date().getFullYear()
-  const thisYear = years.includes(currentYear) ? currentYear : latestYear
   const [heatmapYear, setHeatmapYear] = useState<HeatmapYear>(latestYear)
   const [listYear, setListYear] = useState<HeatmapYear>(latestYear)
   const [tracksYear, setTracksYear] = useState<HeatmapYear>(latestYear)
-  const [summaryYear, setSummaryYear] = useState<HeatmapYear>(thisYear)
+  const [summaryYear, setSummaryYear] = useState<HeatmapYear>(latestYear)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const listActivities = useMemo(

@@ -19,6 +19,7 @@ Agent 在改代码时从 [`AGENTS.md`](AGENTS.md) 进入，按主题阅读 [`doc
 bun install
 cp .env.example .env.local
 # 填入 NEXT_PUBLIC_MAPBOX_TOKEN
+# 生产环境再填 NEXT_PUBLIC_UMAMI_HOST 和 NEXT_PUBLIC_UMAMI_WEBSITE_ID
 bun dev
 ```
 

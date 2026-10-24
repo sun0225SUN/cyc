@@ -3,6 +3,7 @@
 help:
 	@echo "Available targets:"
 	@echo "  make fetch   - Download iGPSPORT FIT files"
+	@echo "  make parse   - Parse FIT files into SQLite"
 	@echo "  make test    - Run Python tests"
 	@echo "  make lint    - Lint with Ruff"
 	@echo "  make format  - Format with Black and fix Ruff issues"
@@ -11,6 +12,9 @@ help:
 
 fetch:
 	uv run igpsport-sync
+
+parse:
+	uv run fit-parse
 
 test:
 	uv run pytest

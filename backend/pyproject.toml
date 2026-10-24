@@ -1,15 +1,26 @@
 [project]
 name = "igpsport-sync"
 version = "0.1.0"
-description = "Download original FIT files from iGPSPORT."
+description = "Download iGPSPORT FIT files and import them into SQLite."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "GPL-3.0-only"
 authors = [{ name = "Guoqi Sun" }]
-dependencies = ["httpx>=0.27"]
+dependencies = [
+    "garmin-fit-sdk>=21.218.0",
+    "httpx>=0.27",
+    "polyline>=2.0.4",
+]
 
 [project.scripts]
 igpsport-sync = "igpsport_sync:main"
+fit-parse = "fit_parse:main"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src/igpsport_sync.py", "src/fit_parse.py"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
 
 [build-system]
 requires = ["hatchling"]
@@ -25,15 +36,15 @@ target-version = ["py312"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-src = ["."]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["igpsport_sync"]
+known-first-party = ["fit_parse", "igpsport_sync"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = ["src"]

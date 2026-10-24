@@ -41,4 +41,4 @@ The old `src/components`, `src/hooks`, `src/stores`, `src/i18n`, `src/lib`, `src
 
 ## Backend
 
-iGPSPORT FIT downloads live in `backend/igpsport_sync.py`, outside the FSD tree. Do not put that script or the downloaded FIT files under `src/` or `app/`. Keep this as one script until a second platform or file processing needs its own module. The command is `igpsport-sync`. It downloads FIT only. GPX, TCX, parsing, and the Next.js UI are later work.
+iGPSPORT downloads live in `backend/src/igpsport_sync.py`. Parsing those FIT files into SQLite lives in `backend/src/fit_parse.py`. Both stay outside the Next.js tree. Do not put the scripts, FIT files, or the database under the app's `src/` or `app/`. The commands are `igpsport-sync` and `fit-parse`. GPX, TCX, and the Next.js UI are later work.

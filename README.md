@@ -40,6 +40,7 @@ cd backend
 cp .env.example .env
 uv sync
 uv run igpsport-sync
+uv run fit-parse
 ```
 
 ```bash

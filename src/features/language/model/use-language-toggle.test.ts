@@ -15,6 +15,7 @@ vi.mock('@/shared/i18n/navigation', () => ({
 
 beforeEach(() => {
   replace.mockClear()
+  window.history.replaceState(null, '', '/')
 })
 
 test('does not navigate when the locale stays the same', () => {
@@ -35,4 +36,18 @@ test('replaces the route when the locale changes', () => {
   })
 
   expect(replace).toHaveBeenCalledWith('/', { locale: 'zh' })
+})
+
+test('keeps the ride query when switching locale', () => {
+  window.history.replaceState(null, '', '/?ride=3515857')
+  const { result } = renderHook(() => useLanguageToggle())
+
+  act(() => {
+    result.current.onSelectChange('zh')
+  })
+
+  expect(replace).toHaveBeenCalledWith(
+    { pathname: '/', query: { ride: '3515857' } },
+    { locale: 'zh' },
+  )
 })

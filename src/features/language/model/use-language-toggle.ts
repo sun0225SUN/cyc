@@ -3,6 +3,7 @@
 import { useLocale } from 'next-intl'
 import { startTransition } from 'react'
 import { usePathname, useRouter } from '@/shared/i18n/navigation'
+import { hrefWithCurrentQuery } from '@/shared/lib/current-query'
 
 export function useLanguageToggle() {
   const locale = useLocale()
@@ -13,7 +14,7 @@ export function useLanguageToggle() {
     if (nextLocale === locale) return
 
     startTransition(() => {
-      router.replace(pathname, { locale: nextLocale })
+      router.replace(hrefWithCurrentQuery(pathname), { locale: nextLocale })
     })
   }
 

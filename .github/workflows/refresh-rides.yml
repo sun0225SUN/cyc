@@ -1,4 +1,4 @@
-name: Refresh rides
+name: Refresh Rides
 
 on:
   workflow_dispatch:

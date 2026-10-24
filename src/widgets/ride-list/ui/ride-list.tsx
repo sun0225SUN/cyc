@@ -20,6 +20,7 @@ type RideListProps = {
   activities: Activity[]
   locale: string
   selectedDate?: string | null
+  selectedRideId?: number | null
   yearTabs?: ReactNode
   onSelect?: (activity: Activity) => void
 }
@@ -28,6 +29,7 @@ export function RideList({
   activities,
   locale,
   selectedDate,
+  selectedRideId,
   yearTabs,
   onSelect,
 }: RideListProps) {
@@ -123,6 +125,7 @@ export function RideList({
                 key={activity.run_id}
                 onClick={() => onSelect?.(activity)}
                 data-active={
+                  selectedRideId === activity.run_id ||
                   selectedDate === activity.start_date_local.slice(0, 10)
                 }
                 className='data-[active=true]:bg-ride/8 data-[active=true]:text-ride grid w-full cursor-pointer grid-cols-[1.4fr_1.15fr_0.85fr_0.95fr_0.85fr_0.85fr] border-b text-left transition-colors last:border-b-0 hover:bg-black/2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 dark:hover:bg-white/3.5'

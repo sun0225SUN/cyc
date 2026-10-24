@@ -15,6 +15,7 @@ import { YearTabs } from './year-tabs'
 type RideExplorerProps = {
   activities: Activity[]
   locale: string
+  selectedRideId?: number | null
   onSelect: (activity: Activity, occurrences?: Activity[]) => void
 }
 
@@ -28,6 +29,7 @@ function activitiesInYear(activities: Activity[], year: HeatmapYear) {
 export function RideExplorer({
   activities,
   locale,
+  selectedRideId,
   onSelect,
 }: RideExplorerProps) {
   const years = useMemo(() => activityYears(activities), [activities])
@@ -57,8 +59,8 @@ export function RideExplorer({
           <YearTabs
             years={years}
             selectedYear={heatmapYear}
-            onYearChange={(year) => {
-              setHeatmapYear(year)
+            onYearChange={(next) => {
+              setHeatmapYear(next)
               setSelectedDate(null)
             }}
           />
@@ -73,16 +75,17 @@ export function RideExplorer({
         activities={listActivities}
         locale={locale}
         selectedDate={selectedDate}
+        selectedRideId={selectedRideId}
         yearTabs={
           <YearTabs
             years={years}
             selectedYear={listYear}
-            onYearChange={(year) => {
-              setListYear(year)
+            onYearChange={(next) => {
+              setListYear(next)
               if (
                 selectedDate &&
-                year !== 'all' &&
-                !selectedDate.startsWith(String(year))
+                next !== 'all' &&
+                !selectedDate.startsWith(String(next))
               ) {
                 setSelectedDate(null)
               }

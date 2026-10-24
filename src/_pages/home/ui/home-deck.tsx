@@ -9,6 +9,7 @@ import {
   type RideMapCamera,
   Starfield,
 } from '@/widgets/ride-map'
+import { useHomeQuery } from '../model/use-home-query'
 import { PageSwitch } from './page-switch'
 import { RideDetail } from './ride-detail'
 import { RideExplorer } from './ride-explorer'
@@ -23,6 +24,7 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
   const [camera, setCamera] = useState<RideMapCamera | null>(null)
+  const { query, setQuery } = useHomeQuery()
   const [detail, setDetail] = useState<{
     activity: Activity
     occurrences: Activity[]
@@ -30,14 +32,43 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
 
   const openDetail = useCallback(
     (activity: Activity, occurrences?: Activity[]) => {
+      setQuery({ ride: activity.run_id })
       setDetail({
         activity,
         occurrences:
           occurrences && occurrences.length > 0 ? occurrences : [activity],
       })
     },
-    [],
+    [setQuery],
   )
+
+  const closeDetail = useCallback(() => {
+    setQuery({ ride: null })
+    setDetail(null)
+  }, [setQuery])
+
+  useEffect(() => {
+    if (query.ride == null) {
+      setDetail((current) => (current ? null : current))
+      return
+    }
+
+    const activity = activities.find((item) => item.run_id === query.ride)
+    if (!activity) {
+      setQuery({ ride: null })
+      return
+    }
+
+    setDetail((current) => {
+      if (current?.activity.run_id === activity.run_id) return current
+      const occurrences = current?.occurrences.some(
+        (item) => item.run_id === activity.run_id,
+      )
+        ? current.occurrences
+        : [activity]
+      return { activity, occurrences }
+    })
+  }, [activities, query.ride, setQuery])
 
   useEffect(() => {
     const scroller = scrollerRef.current
@@ -118,6 +149,7 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
           <RideExplorer
             activities={activities}
             locale={locale}
+            selectedRideId={query.ride}
             onSelect={openDetail}
           />
         </section>
@@ -143,10 +175,11 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
           occurrences={detail.occurrences}
           locale={locale}
           token={mapboxToken()}
-          onSelectOccurrence={(activity) =>
+          onSelectOccurrence={(activity) => {
+            setQuery({ ride: activity.run_id })
             setDetail({ activity, occurrences: detail.occurrences })
-          }
-          onBack={() => setDetail(null)}
+          }}
+          onBack={closeDetail}
         />
       )}
     </div>

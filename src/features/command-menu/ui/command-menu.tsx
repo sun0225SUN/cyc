@@ -7,6 +7,7 @@ import { startTransition, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { githubRepositoryUrl } from '@/shared/config/site'
 import { usePathname, useRouter } from '@/shared/i18n/navigation'
+import { hrefWithCurrentQuery } from '@/shared/lib/current-query'
 import './command-menu.css'
 
 const targets = {
@@ -73,7 +74,7 @@ export function CommandMenu() {
 
   const switchLanguage = () => {
     startTransition(() => {
-      router.replace(pathname, { locale: nextLocale })
+      router.replace(hrefWithCurrentQuery(pathname), { locale: nextLocale })
     })
     close()
   }

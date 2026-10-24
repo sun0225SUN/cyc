@@ -7,13 +7,13 @@ updates:
     # Check the registry for updates every month
     schedule:
       interval: monthly
-      time: '06:00'
+      time: "06:00"
     # Limit the number of open pull requests for version updates to 1
     open-pull-requests-limit: 1
     # Commit message format
     commit-message:
       # Match Commitlint: `:package: build(deps): ...`
-      prefix: ':package: build'
+      prefix: ":package: build"
       include: scope
     # Group updates into a single pull request
     groups:
@@ -22,18 +22,18 @@ updates:
         update-types: [minor, patch]
     # Only allow minor and patch updates
     ignore:
-      - dependency-name: '*'
-        update-types: ['version-update:semver-major']
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # Backend lockfile
   - package-ecosystem: uv
     directory: /backend
     schedule:
       interval: monthly
-      time: '06:10'
+      time: "06:10"
     open-pull-requests-limit: 1
     commit-message:
-      prefix: ':package: build'
+      prefix: ":package: build"
       include: scope
 
   # Enable version updates for GitHub Actions
@@ -43,11 +43,11 @@ updates:
     # Check GitHub Actions for updates every month
     schedule:
       interval: monthly
-      time: '06:05'
+      time: "06:05"
     # Limit the number of open pull requests for version updates to 1
     open-pull-requests-limit: 1
     # Commit message format
     commit-message:
       # Match Commitlint: `:ferris_wheel: ci(deps): ...`
-      prefix: ':ferris_wheel: ci'
+      prefix: ":ferris_wheel: ci"
       include: scope

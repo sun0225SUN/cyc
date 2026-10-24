@@ -17,7 +17,7 @@ jobs:
       - name: Contribute List
         uses: akhilmhdh/contributors-readme-action@v2.3.11
         with:
-          commit_message: ':memo: docs(contributor): update the contributor list'
-          pr_title_on_protected: ':memo: docs(contributor): update the contributor list'
+          commit_message: ":memo: docs(contributor): update the contributor list"
+          pr_title_on_protected: ":memo: docs(contributor): update the contributor list"
         env:
           GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN }}

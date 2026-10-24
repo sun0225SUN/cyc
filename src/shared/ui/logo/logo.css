@@ -1,0 +1,37 @@
+.logo-wind {
+  animation: logo-wind 1.05s linear infinite;
+}
+
+.logo-wind-2 {
+  animation-delay: 0.18s;
+}
+
+.logo-wind-3 {
+  animation-delay: 0.4s;
+}
+
+.logo-wind-4 {
+  animation-delay: 0.62s;
+}
+
+@keyframes logo-wind {
+  0% {
+    transform: translateX(14px);
+    opacity: 0;
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-32px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-wind {
+    animation: none;
+  }
+}

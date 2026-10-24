@@ -1,22 +1,24 @@
-import { getTranslations } from 'next-intl/server'
-import { BearDemo } from '@/features/bear'
-import { LanguageToggle } from '@/features/language'
-import { ThemeToggle } from '@/features/theme'
-import { Button } from '@/shared/ui/button'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { loadActivities } from '@/entities/activity/index.server'
+import { mapboxToken } from '@/shared/config/mapbox'
+import { Brand } from '@/shared/ui/logo'
+import { RideMap } from '@/widgets/ride-map'
+
+export async function generateMetadata() {
+  const t = await getTranslations('site')
+  return { title: t('name') }
+}
 
 export async function HomePage() {
-  const t = await getTranslations('home')
+  const locale = await getLocale()
+  const activities = await loadActivities()
 
   return (
-    <div className='relative flex min-h-svh items-center justify-center'>
-      <div className='absolute top-4 right-4 flex items-center gap-3'>
-        <LanguageToggle />
-        <ThemeToggle />
+    <main className='relative h-svh'>
+      <RideMap activities={activities} locale={locale} token={mapboxToken()} />
+      <div className='pointer-events-none absolute top-4 left-4 z-10'>
+        <Brand />
       </div>
-      <div className='flex flex-col items-center gap-6'>
-        <BearDemo />
-        <Button>{t('clickMe')}</Button>
-      </div>
-    </div>
+    </main>
   )
 }

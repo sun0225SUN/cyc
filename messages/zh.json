@@ -4,12 +4,17 @@
     "en": "English",
     "zh": "简体中文"
   },
-  "home": {
-    "clickMe": "点我"
+  "site": {
+    "name": "cyc"
   },
-  "bear": {
-    "aroundHere": "{count} 只在这附近 ...",
-    "oneUp": "加一只",
-    "removeAll": "清空"
+  "map": {
+    "missingToken": "设置 NEXT_PUBLIC_MAPBOX_TOKEN 后才能显示地图。",
+    "globe": "地球",
+    "flat": "平面",
+    "rotate": "旋转",
+    "pause": "暂停旋转",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "locate": "定位"
   }
 }

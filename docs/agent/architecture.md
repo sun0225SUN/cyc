@@ -41,4 +41,6 @@ The old `src/components`, `src/hooks`, `src/stores`, `src/i18n`, `src/lib`, `src
 
 ## Backend
 
-iGPSPORT downloads live in `backend/src/igpsport_sync.py`. Parsing those FIT files into SQLite lives in `backend/src/fit_parse.py`. `backend/src/export_activities.py` writes `data/activities.json` at the repository root. Keep the scripts outside the Next.js tree. Do not put FIT files or the database under the app's `src/` or `app/`. The commands are `igpsport-sync`, `fit-parse`, and `export-activities`. GPX, TCX, and the Next.js UI are later work.
+iGPSPORT downloads live in `backend/src/igpsport_sync.py`. Parsing those FIT files into SQLite lives in `backend/src/fit_parse.py`. `backend/src/export_activities.py` writes `data/activities.json` at the repository root. That JSON is tracked and read by the home page. Raw FIT files and `backend/data/activities.db` stay gitignored. Keep the Python scripts outside the Next.js tree. Do not put FIT files or the database under the app's `src/` or `app/`. The commands are `igpsport-sync`, `fit-parse`, and `export-activities`.
+
+The home page map is `src/widgets/ride-map`. It uses Mapbox only: `light-v11` in light mode and `dark-v11` in dark mode. Zoom, locate, projection, and rotation are custom controls, not Mapbox's default control chrome. GPX and TCX are later work.

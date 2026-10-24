@@ -10,13 +10,15 @@ Agent 在改代码时从 [`AGENTS.md`](AGENTS.md) 进入，按主题阅读 [`doc
 - Bun
 - next-intl（`en` 为默认语言，不带前缀；`zh` 使用 `/zh`）
 - Tailwind CSS 4、shadcn/ui
-- Zustand
+- Mapbox GL
 - Biome、Lefthook、Commitizen（cz-git）、Vitest
 
 ## 开发
 
 ```bash
 bun install
+cp .env.example .env.local
+# 填入 NEXT_PUBLIC_MAPBOX_TOKEN
 bun dev
 ```
 
@@ -33,7 +35,7 @@ bun run test
 
 ## 后端
 
-活动数据的获取和处理放在 `backend/`，不进页面的 `src/`。当前从 iGPSPORT 下载 FIT，解析进 SQLite，再导出 `data/activities.json`。地图和统计还没做。说明见 [`backend/README.md`](backend/README.md)。
+活动数据的获取和处理放在 `backend/`，不进页面的 `src/`。当前从 iGPSPORT 下载 FIT，解析进 SQLite，再导出 `data/activities.json`。首页只用 Mapbox 画这些轨迹，浅色是 `light-v11`，深色是 `dark-v11`。说明见 [`backend/README.md`](backend/README.md)。
 
 ```bash
 cd backend

@@ -4,12 +4,17 @@
     "en": "English",
     "zh": "简体中文"
   },
-  "home": {
-    "clickMe": "Click me"
+  "site": {
+    "name": "cyc"
   },
-  "bear": {
-    "aroundHere": "{count} around here ...",
-    "oneUp": "one up",
-    "removeAll": "remove all bears"
+  "map": {
+    "missingToken": "Set NEXT_PUBLIC_MAPBOX_TOKEN to show the map.",
+    "globe": "Globe",
+    "flat": "Flat map",
+    "rotate": "Rotate",
+    "pause": "Pause rotation",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "locate": "Locate"
   }
 }

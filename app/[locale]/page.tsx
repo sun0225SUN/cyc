@@ -1,1 +1,1 @@
-export { HomePage as default } from '@/_pages/home'
+export { generateMetadata, HomePage as default } from '@/_pages/home'

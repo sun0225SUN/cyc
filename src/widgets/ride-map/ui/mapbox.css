@@ -1,0 +1,8 @@
+.ride-map .mapboxgl-ctrl-logo,
+.ride-map .mapboxgl-ctrl-attrib,
+.ride-map .mapboxgl-ctrl-attrib-button,
+.ride-map .mapboxgl-compact,
+.ride-map .mapboxgl-ctrl-bottom-left,
+.ride-map .mapboxgl-ctrl-bottom-right {
+  display: none;
+}

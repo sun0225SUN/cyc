@@ -33,7 +33,7 @@ bun run test
 
 ## 后端
 
-活动数据的获取和处理放在 `backend/`，不进 `src/`。当前只从 iGPSPORT 下载原始 FIT，不解析，也不做页面。说明见 [`backend/README.md`](backend/README.md)。
+活动数据的获取和处理放在 `backend/`，不进页面的 `src/`。当前从 iGPSPORT 下载 FIT，解析进 SQLite，再导出 `data/activities.json`。地图和统计还没做。说明见 [`backend/README.md`](backend/README.md)。
 
 ```bash
 cd backend
@@ -41,6 +41,7 @@ cp .env.example .env
 uv sync
 uv run igpsport-sync
 uv run fit-parse
+uv run export-activities
 ```
 
 ```bash

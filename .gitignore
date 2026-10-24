@@ -40,6 +40,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+# Raw FIT files and the SQLite database. /data/activities.json stays tracked for the frontend.
 backend/data/
 *.fit
 

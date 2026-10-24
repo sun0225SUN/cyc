@@ -4,6 +4,7 @@ help:
 	@echo "Available targets:"
 	@echo "  make fetch   - Download iGPSPORT FIT files"
 	@echo "  make parse   - Parse FIT files into SQLite"
+	@echo "  make export  - Write activities.json from SQLite"
 	@echo "  make test    - Run Python tests"
 	@echo "  make lint    - Lint with Ruff"
 	@echo "  make format  - Format with Black and fix Ruff issues"
@@ -15,6 +16,9 @@ fetch:
 
 parse:
 	uv run fit-parse
+
+export:
+	uv run export-activities
 
 test:
 	uv run pytest

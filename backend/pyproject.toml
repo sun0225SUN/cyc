@@ -15,9 +15,10 @@ dependencies = [
 [project.scripts]
 igpsport-sync = "igpsport_sync:main"
 fit-parse = "fit_parse:main"
+export-activities = "export_activities:main"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src/igpsport_sync.py", "src/fit_parse.py"]
+only-include = ["src/igpsport_sync.py", "src/fit_parse.py", "src/export_activities.py"]
 
 [tool.hatch.build.targets.wheel.sources]
 "src" = ""
@@ -43,7 +44,7 @@ select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fit_parse", "igpsport_sync"]
+known-first-party = ["export_activities", "fit_parse", "igpsport_sync"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

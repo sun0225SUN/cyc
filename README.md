@@ -29,7 +29,23 @@ bun run format
 bun run test
 ```
 
-提交使用仓库里的 cz-git 配置：标题形如 `:sparkles: feat(scope): subject`。`pre-commit` 会格式化已暂存文件，`commit-msg` 会跑 Commitlint。`git push` 之前 Lefthook 会先跑完单元测试，失败则不会推送。
+提交使用仓库里的 cz-git 配置：标题形如 `:sparkles: feat(scope): subject`。`pre-commit` 会格式化已暂存的前端文件，并对已暂存的 Python 文件跑 Ruff 和 Black。`commit-msg` 会跑 Commitlint。`git push` 之前 Lefthook 会跑前端测试；这次推送包含 `backend/` 时，还会跑 Python 测试。失败则不会推送。
+
+## 后端
+
+活动数据的获取和处理放在 `backend/`，不进 `src/`。当前只从 iGPSPORT 下载原始 FIT，不解析，也不做页面。说明见 [`backend/README.md`](backend/README.md)。
+
+```bash
+cd backend
+cp .env.example .env
+uv sync
+uv run igpsport-sync
+```
+
+```bash
+make -C backend check
+make -C backend test
+```
 
 ## 目录
 

@@ -25,6 +25,17 @@ updates:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
 
+  # Backend lockfile
+  - package-ecosystem: uv
+    directory: /backend
+    schedule:
+      interval: monthly
+      time: '06:10'
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: ':package: build'
+      include: scope
+
   # Enable version updates for GitHub Actions
   - package-ecosystem: github-actions
     # Look for `.github/workflows` in the root directory

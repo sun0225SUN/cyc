@@ -38,3 +38,7 @@ Use `ui`, `model`, `api`, `lib`, and `config`. Name any other segment by its pur
 Put a Zustand store in the `model` segment of the slice that owns the interaction. Put shadcn primitives in `shared/ui/<name>`. Put `cn` and other project-agnostic helpers in `shared/lib/<topic>`, one topic per folder.
 
 The old `src/components`, `src/hooks`, `src/stores`, `src/i18n`, `src/lib`, `src/styles`, and `src/types` paths are retired. Do not add files there.
+
+## Backend
+
+iGPSPORT FIT downloads live in `backend/igpsport_sync.py`, outside the FSD tree. Do not put that script or the downloaded FIT files under `src/` or `app/`. Keep this as one script until a second platform or file processing needs its own module. The command is `igpsport-sync`. It downloads FIT only. GPX, TCX, parsing, and the Next.js UI are later work.

@@ -10,6 +10,10 @@ pre-commit:
       run: bunx biome format --write {staged_files}
       stage_fixed: true
 
+    python-lint:
+      glob: "*.py"
+      run: uv run --project backend ruff check {staged_files} && uv run --project backend black --check {staged_files}
+
 commit-msg:
   commands:
     validate-commit-message:
@@ -19,3 +23,7 @@ pre-push:
   commands:
     test:
       run: bun run test
+
+    python-test:
+      glob: "backend/**"
+      run: uv run --directory backend pytest

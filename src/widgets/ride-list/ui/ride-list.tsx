@@ -2,8 +2,8 @@
 
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useRef, useState } from 'react'
-import type { Activity } from '@/entities/activity'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type Activity, activityNameKey } from '@/entities/activity'
 import { formatActivityDate } from '../model/format-activity-date'
 import { formatMovingTime } from '../model/format-moving-time'
 
@@ -12,14 +12,26 @@ const PAGE_SIZE = 12
 type RideListProps = {
   activities: Activity[]
   locale: string
+  selectedDate?: string | null
+  onSelect?: (activity: Activity) => void
 }
 
-export function RideList({ activities, locale }: RideListProps) {
+export function RideList({
+  activities,
+  locale,
+  selectedDate,
+  onSelect,
+}: RideListProps) {
   const t = useTranslations('rides')
+  const activityNames = useTranslations('activityNames')
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
-  const rows = [...activities].sort((a, b) =>
-    b.start_date_local.localeCompare(a.start_date_local),
+  const rows = useMemo(
+    () =>
+      [...activities].sort((a, b) =>
+        b.start_date_local.localeCompare(a.start_date_local),
+      ),
+    [activities],
   )
   const totalPages = Math.ceil(rows.length / PAGE_SIZE)
   const pageRows = rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -34,11 +46,31 @@ export function RideList({ activities, locale }: RideListProps) {
   const elevationFormat = new Intl.NumberFormat(locale, {
     maximumFractionDigits: 0,
   })
+  const formatActivityName = (name: string) => {
+    const key = activityNameKey(name)
+    return key ? activityNames(key) : name
+  }
+
+  useEffect(() => {
+    if (!selectedDate) return
+    const rowIndex = rows.findIndex((activity) =>
+      activity.start_date_local.startsWith(selectedDate),
+    )
+    if (rowIndex >= 0) setPage(Math.floor(rowIndex / PAGE_SIZE))
+    requestAnimationFrame(() => {
+      scrollerRef.current?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'instant'
+          : 'smooth',
+      })
+    })
+  }, [rows, selectedDate])
 
   const goToPage = useCallback((nextPage: number) => {
     setPage(nextPage)
-    scrollerRef.current?.scrollTo({
-      top: 0,
+    scrollerRef.current?.scrollIntoView({
+      block: 'start',
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
         ? 'instant'
         : 'smooth',
@@ -46,11 +78,8 @@ export function RideList({ activities, locale }: RideListProps) {
   }, [])
 
   return (
-    <div
-      ref={scrollerRef}
-      className='h-full scrollbar-gutter-stable overflow-y-auto overscroll-y-contain'
-    >
-      <div className='mx-auto flex min-h-full w-full max-w-5xl flex-col px-6 pt-14 pb-24 md:px-10 md:pt-16'>
+    <div ref={scrollerRef} className='scrollbar-gutter-stable'>
+      <div className='mx-auto flex w-full max-w-6xl flex-col px-6 pt-8 pb-24 md:px-10'>
         <header className='shrink-0'>
           <div className='flex flex-wrap items-end justify-between gap-3'>
             <h1 className='text-3xl font-medium tracking-tight'>
@@ -67,46 +96,48 @@ export function RideList({ activities, locale }: RideListProps) {
         </header>
 
         <div className='mt-8 overflow-x-auto rounded-2xl border bg-white/40 dark:bg-white/2.5'>
-          <table className='w-full min-w-170 text-left text-sm'>
-            <thead className='text-muted-foreground sticky top-0 z-10 border-b bg-white/85 text-[11px] tracking-[0.08em] uppercase backdrop-blur-md dark:bg-neutral-950/85'>
-              <tr>
-                <th className='py-3 pr-4 pl-5 font-medium'>{t('date')}</th>
-                <th className='px-4 py-3 font-medium'>{t('distance')}</th>
-                <th className='px-4 py-3 font-medium'>{t('time')}</th>
-                <th className='px-4 py-3 font-medium'>{t('speed')}</th>
-                <th className='py-3 pr-5 pl-4 font-medium'>{t('elevation')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map((activity) => (
-                <tr
-                  key={activity.run_id}
-                  className='border-b transition-colors last:border-b-0 hover:bg-black/2.5 dark:hover:bg-white/3.5'
-                >
-                  <td className='py-4 pr-4 pl-5'>
-                    <span className='font-medium'>
-                      {formatActivityDate(activity.start_date_local, locale)}
-                    </span>
-                    <span className='text-muted-foreground mt-1 block text-xs'>
-                      {activity.name || activity.subtype || activity.type}
-                    </span>
-                  </td>
-                  <td className='px-4 py-4 font-medium tabular-nums'>
-                    {distanceFormat.format(activity.distance / 1000)}
-                  </td>
-                  <td className='text-muted-foreground px-4 py-4 tabular-nums'>
-                    {formatMovingTime(activity.moving_time)}
-                  </td>
-                  <td className='text-muted-foreground px-4 py-4 tabular-nums'>
-                    {speedFormat.format(activity.average_speed * 3.6)}
-                  </td>
-                  <td className='py-4 pr-5 pl-4 tabular-nums'>
-                    {elevationFormat.format(activity.elevation_gain)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className='min-w-200 text-sm'>
+            <div className='text-muted-foreground sticky top-0 z-10 grid grid-cols-[1.4fr_1.15fr_0.85fr_0.95fr_0.85fr_0.85fr] border-b bg-white/85 text-[11px] tracking-[0.08em] uppercase backdrop-blur-md dark:bg-neutral-950/85'>
+              <span className='py-3 pr-4 pl-5 font-medium'>{t('name')}</span>
+              <span className='px-4 py-3 font-medium'>{t('date')}</span>
+              <span className='px-4 py-3 font-medium'>{t('distance')}</span>
+              <span className='px-4 py-3 font-medium'>{t('time')}</span>
+              <span className='px-4 py-3 font-medium'>{t('speed')}</span>
+              <span className='py-3 pr-5 pl-4 font-medium'>
+                {t('elevation')}
+              </span>
+            </div>
+            {pageRows.map((activity) => (
+              <button
+                type='button'
+                key={activity.run_id}
+                onClick={() => onSelect?.(activity)}
+                data-active={
+                  selectedDate === activity.start_date_local.slice(0, 10)
+                }
+                className='grid w-full cursor-pointer grid-cols-[1.4fr_1.15fr_0.85fr_0.95fr_0.85fr_0.85fr] border-b text-left transition-colors last:border-b-0 hover:bg-black/2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 data-[active=true]:bg-blue-500/8 data-[active=true]:text-blue-600 dark:hover:bg-white/3.5 dark:data-[active=true]:bg-orange-400/8 dark:data-[active=true]:text-orange-400'
+              >
+                <span className='py-4 pr-4 pl-5 font-medium'>
+                  {formatActivityName(activity.name)}
+                </span>
+                <span className='px-4 py-4 tabular-nums'>
+                  {formatActivityDate(activity.start_date_local, locale)}
+                </span>
+                <span className='px-4 py-4 font-medium tabular-nums'>
+                  {distanceFormat.format(activity.distance / 1000)}
+                </span>
+                <span className='px-4 py-4 tabular-nums'>
+                  {formatMovingTime(activity.moving_time)}
+                </span>
+                <span className='px-4 py-4 tabular-nums'>
+                  {speedFormat.format(activity.average_speed * 3.6)}
+                </span>
+                <span className='py-4 pr-5 pl-4 tabular-nums'>
+                  {elevationFormat.format(activity.elevation_gain)}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <nav

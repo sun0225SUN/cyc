@@ -7,6 +7,15 @@
   "site": {
     "name": "cyc"
   },
+  "activityNames": {
+    "lateNight": "凌晨骑行",
+    "earlyMorning": "早晨骑行",
+    "morning": "上午骑行",
+    "noon": "中午骑行",
+    "afternoon": "下午骑行",
+    "evening": "傍晚骑行",
+    "night": "晚上骑行"
+  },
   "map": {
     "missingToken": "设置 NEXT_PUBLIC_MAPBOX_TOKEN 后才能显示地图。",
     "globe": "地球",
@@ -21,6 +30,7 @@
     "title": "骑行记录",
     "count": "{count} 次骑行",
     "date": "日期",
+    "name": "名称",
     "distance": "距离（公里）",
     "time": "移动时间",
     "speed": "速度（公里/小时）",
@@ -30,7 +40,43 @@
     "page": "第 {page} / {pages} 页",
     "previousPage": "上一页骑行记录",
     "nextPage": "下一页骑行记录",
-    "previous": "地图",
-    "next": "骑行列表"
+    "previous": "上一页",
+    "next": "下一页"
+  },
+  "heatmap": {
+    "title": "骑行热力图",
+    "summary": "{count} 次骑行 · {distance} 公里",
+    "yearSelection": "选择年份",
+    "all": "全部",
+    "dayDetail": "{date}：{count} 次骑行，{distance} 公里",
+    "less": "少",
+    "more": "多",
+    "jan": "1月",
+    "feb": "2月",
+    "mar": "3月",
+    "apr": "4月",
+    "may": "5月",
+    "jun": "6月",
+    "jul": "7月",
+    "aug": "8月",
+    "sep": "9月",
+    "oct": "10月",
+    "nov": "11月",
+    "dec": "12月",
+    "sun": "日",
+    "mon": "一",
+    "tue": "二",
+    "wed": "三",
+    "thu": "四",
+    "fri": "五",
+    "sat": "六"
+  },
+  "rideDetail": {
+    "back": "返回骑行记录",
+    "untitled": "未命名骑行",
+    "distance": "距离",
+    "movingTime": "移动时间",
+    "averageSpeed": "平均速度",
+    "elevation": "累计爬升"
   }
 }

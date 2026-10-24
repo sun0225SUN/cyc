@@ -80,15 +80,16 @@ def _with_streak(rows: list[sqlite3.Row]) -> list[tuple[sqlite3.Row, int]]:
 
 
 def _activity(row: sqlite3.Row, streak: int) -> dict[str, object]:
+    start_date_local = row["start_date_local"]
     return {
         "run_id": row["id"],
-        "name": row["name"],
+        "name": _activity_name(row["name"], start_date_local),
         "distance": row["distance"],
         "moving_time": str(timedelta(seconds=int(row["moving_time"]))),
         "type": row["type"],
         "subtype": row["subtype"],
         "start_date": row["start_date"],
-        "start_date_local": row["start_date_local"],
+        "start_date_local": start_date_local,
         "location_country": "",
         "summary_polyline": row["summary_polyline"],
         "average_heartrate": row["average_heartrate"],
@@ -96,6 +97,29 @@ def _activity(row: sqlite3.Row, streak: int) -> dict[str, object]:
         "elevation_gain": row["elevation_gain"],
         "streak": streak,
     }
+
+
+def _activity_name(name: str | None, start_date_local: str) -> str:
+    """Keep a source name, or name an unnamed ride from its local start time."""
+
+    if name and name.strip():
+        return name.strip()
+    hour = datetime.strptime(start_date_local, "%Y-%m-%d %H:%M:%S").hour
+    if hour < 5:
+        period = "lateNight"
+    elif hour < 9:
+        period = "earlyMorning"
+    elif hour < 12:
+        period = "morning"
+    elif hour < 14:
+        period = "noon"
+    elif hour < 18:
+        period = "afternoon"
+    elif hour < 20:
+        period = "evening"
+    else:
+        period = "night"
+    return period
 
 
 if __name__ == "__main__":

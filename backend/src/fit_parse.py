@@ -76,7 +76,7 @@ def parse_fit(path: Path) -> Activity:
     activity_type = "Run" if sport.lower() == "running" else sport.lower()
     return Activity(
         id=_activity_id(path, start),
-        name=str(session.get("sport_profile_name") or ""),
+        name=_activity_name(str(session.get("sport_profile_name") or ""), local),
         type=activity_type,
         subtype=str(session.get("sub_sport") or ""),
         start_date=_format(start),
@@ -204,6 +204,11 @@ def _exists(connection: sqlite3.Connection, activity_id: int) -> bool:
 
 
 def _insert(connection: sqlite3.Connection, activity: Activity) -> None:
+    local_start = datetime.strptime(
+        activity.start_date_local,
+        "%Y-%m-%d %H:%M:%S",
+    )
+    name = _activity_name(activity.name, local_start)
     connection.execute(
         """
         INSERT INTO activities (
@@ -214,7 +219,7 @@ def _insert(connection: sqlite3.Connection, activity: Activity) -> None:
         """,
         (
             activity.id,
-            activity.name,
+            name,
             activity.type,
             activity.subtype,
             activity.start_date,
@@ -232,6 +237,29 @@ def _insert(connection: sqlite3.Connection, activity: Activity) -> None:
         ),
     )
     connection.commit()
+
+
+def _activity_name(name: str, local_start: datetime) -> str:
+    """Keep the FIT profile name, or name a ride from its local start time."""
+
+    if name.strip():
+        return name.strip()
+    hour = local_start.hour
+    if hour < 5:
+        period = "lateNight"
+    elif hour < 9:
+        period = "earlyMorning"
+    elif hour < 12:
+        period = "morning"
+    elif hour < 14:
+        period = "noon"
+    elif hour < 18:
+        period = "afternoon"
+    elif hour < 20:
+        period = "evening"
+    else:
+        period = "night"
+    return period
 
 
 def _activity_id(path: Path, start: datetime) -> int:

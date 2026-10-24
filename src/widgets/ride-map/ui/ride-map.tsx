@@ -28,6 +28,7 @@ type RideMapProps = {
   activities: Activity[]
   locale: string
   token: string
+  onSelect?: (activity: Activity) => void
 }
 
 function appearanceFromDocument(): MapAppearance {
@@ -35,7 +36,7 @@ function appearanceFromDocument(): MapAppearance {
   return 'light'
 }
 
-export function RideMap({ activities, locale, token }: RideMapProps) {
+export function RideMap({ activities, locale, token, onSelect }: RideMapProps) {
   const t = useTranslations('map')
   const { resolvedTheme } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -68,6 +69,40 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
     })
     map.addControl(new MapboxLanguage({ defaultLanguage: mapLanguage(locale) }))
     map.on('dragstart', () => setIsRotating(false))
+    let hoveredRideId: string | number | null = null
+    map.on('mouseenter', 'rides-hit', () => {
+      map.getCanvas().style.cursor = 'pointer'
+    })
+    map.on('mousemove', 'rides-hit', (event) => {
+      const id = event.features?.[0]?.id
+      if (id === undefined || id === hoveredRideId) return
+      if (hoveredRideId !== null) {
+        map.setFeatureState(
+          { source: 'rides', id: hoveredRideId },
+          { hover: false },
+        )
+      }
+      hoveredRideId = id
+      map.setFeatureState({ source: 'rides', id }, { hover: true })
+    })
+    map.on('mouseleave', 'rides-hit', () => {
+      map.getCanvas().style.cursor = ''
+      if (hoveredRideId !== null) {
+        map.setFeatureState(
+          { source: 'rides', id: hoveredRideId },
+          { hover: false },
+        )
+        hoveredRideId = null
+      }
+    })
+    map.on('click', 'rides-hit', (event) => {
+      const id = Number(event.features?.[0]?.properties?.id)
+      const activity = activities.find((item) => item.run_id === id)
+      if (activity) {
+        setIsRotating(false)
+        onSelect?.(activity)
+      }
+    })
     let framed = false
     const frameOnce = () => {
       if (!framed) framed = frameWholeEarth(map, mapData.bounds)
@@ -90,7 +125,7 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
       map.remove()
       mapRef.current = null
     }
-  }, [locale, mapData, token])
+  }, [activities, locale, mapData, onSelect, token])
 
   useEffect(() => {
     const map = mapRef.current
@@ -228,11 +263,28 @@ function drawRides(map: mapboxgl.Map, mapData: RideMapData, color: string) {
   } else {
     map.addSource('rides', { type: 'geojson', data: mapData.geojson })
     map.addLayer({
+      id: 'rides-hit',
+      type: 'line',
+      source: 'rides',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': color, 'line-width': 14, 'line-opacity': 0 },
+    })
+    map.addLayer({
       id: 'rides',
       type: 'line',
       source: 'rides',
       layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': color, 'line-width': 2, 'line-opacity': 0.9 },
+      paint: {
+        'line-color': color,
+        'line-width': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          5,
+          2,
+        ],
+        'line-width-transition': { duration: 150 },
+        'line-opacity': 0.9,
+      },
     })
   }
 }

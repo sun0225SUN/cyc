@@ -7,6 +7,7 @@ export type RideFeatureCollection = {
   type: 'FeatureCollection'
   features: Array<{
     type: 'Feature'
+    id: number
     properties: { id: number }
     geometry: { type: 'LineString'; coordinates: [number, number][] }
   }>
@@ -38,6 +39,7 @@ export function activitiesToGeoJson(activities: Activity[]): RideMapData {
     }
     features.push({
       type: 'Feature',
+      id: activity.run_id,
       properties: { id: activity.run_id },
       geometry: { type: 'LineString', coordinates },
     })

@@ -20,13 +20,10 @@ export function formatActivityDate(value: string, locale: string): string {
   const match = LOCAL_DATE_TIME.exec(value.trim())
   if (!match) return value
 
-  const [, year, month, day, hour, minute] = match
+  const [, year, month, day] = match
   if (locale.toLowerCase().startsWith('zh')) {
-    return `${year}年${Number(month)}月${Number(day)}日 ${hour}:${minute}`
+    return `${year}年${Number(month)}月${Number(day)}日`
   }
 
-  const hour24 = Number(hour)
-  const period = hour24 < 12 ? 'AM' : 'PM'
-  const hour12 = hour24 % 12 || 12
-  return `${ENGLISH_MONTHS[Number(month) - 1]} ${Number(day)}, ${year} at ${String(hour12).padStart(2, '0')}:${minute} ${period}`
+  return `${ENGLISH_MONTHS[Number(month) - 1]} ${Number(day)}, ${year}`
 }

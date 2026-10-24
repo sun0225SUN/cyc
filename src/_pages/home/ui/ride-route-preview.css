@@ -1,0 +1,8 @@
+.ride-route-preview .mapboxgl-ctrl-logo,
+.ride-route-preview .mapboxgl-ctrl-attrib,
+.ride-route-preview .mapboxgl-ctrl-attrib-button,
+.ride-route-preview .mapboxgl-compact,
+.ride-route-preview .mapboxgl-ctrl-bottom-left,
+.ride-route-preview .mapboxgl-ctrl-bottom-right {
+  display: none;
+}

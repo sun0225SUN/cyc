@@ -10,11 +10,17 @@ const iconButton =
 
 type PageSwitchProps = {
   page: number
+  pageCount: number
   onPrevious: () => void
   onNext: () => void
 }
 
-export function PageSwitch({ page, onPrevious, onNext }: PageSwitchProps) {
+export function PageSwitch({
+  page,
+  pageCount,
+  onPrevious,
+  onNext,
+}: PageSwitchProps) {
   const t = useTranslations('rides')
 
   return (
@@ -35,7 +41,7 @@ export function PageSwitch({ page, onPrevious, onNext }: PageSwitchProps) {
         <button
           type='button'
           onClick={onNext}
-          disabled={page === 1}
+          disabled={page === pageCount - 1}
           aria-label={t('next')}
           className={iconButton}
         >

@@ -5,7 +5,7 @@ from pathlib import Path
 import polyline
 import pytest
 
-from fit_parse import FitParseError, import_fit_files, parse_fit
+from fit_parse import FitParseError, _activity_name, import_fit_files, parse_fit
 
 
 def _session(**overrides: object) -> dict[str, object]:
@@ -50,6 +50,7 @@ def test_parse_fit_reads_the_session_and_track(tmp_path: Path, monkeypatch) -> N
     activity = parse_fit(path)
 
     assert activity.id == 42
+    assert activity.name == "lateNight"
     assert activity.type == "cycling"
     assert activity.subtype == "road"
     assert activity.distance == 1000.0
@@ -120,6 +121,29 @@ def test_import_skips_an_id_already_in_the_database(
     assert failed_again == []
     with sqlite3.connect(db) as connection:
         assert connection.execute("SELECT COUNT(*) FROM activities").fetchone()[0] == 2
+        assert connection.execute(
+            "SELECT DISTINCT name FROM activities"
+        ).fetchall() == [("earlyMorning",)]
+
+
+@pytest.mark.parametrize(
+    ("hour", "expected"),
+    [
+        (0, "lateNight"),
+        (5, "earlyMorning"),
+        (9, "morning"),
+        (12, "noon"),
+        (14, "afternoon"),
+        (18, "evening"),
+        (20, "night"),
+    ],
+)
+def test_activity_name_uses_local_start(hour: int, expected: str) -> None:
+    assert _activity_name("", datetime(2024, 1, 1, hour)) == expected
+
+
+def test_activity_name_preserves_fit_profile_name() -> None:
+    assert _activity_name("  周末长途  ", datetime(2024, 1, 1)) == "周末长途"
 
 
 def test_a_bad_file_does_not_stop_the_import(tmp_path: Path, monkeypatch) -> None:

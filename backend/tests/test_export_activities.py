@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from export_activities import ExportError, export_activities, main
+from export_activities import ExportError, _activity_name, export_activities, main
 
 
 def _create_db(path: Path) -> None:
@@ -122,7 +122,30 @@ def test_export_orders_by_local_time_and_counts_streak(tmp_path: Path) -> None:
     assert activities[0]["location_country"] == ""
     assert activities[0]["average_heartrate"] == 140
     assert activities[1]["average_heartrate"] is None
+    assert activities[0]["name"] == "ride"
+    assert activities[1]["name"] == "earlyMorning"
+    assert activities[2]["name"] == "morning"
     assert "elapsed_time" not in activities[0]
+
+
+@pytest.mark.parametrize(
+    ("time", "expected"),
+    [
+        ("2024-01-01 00:00:00", "lateNight"),
+        ("2024-01-01 05:00:00", "earlyMorning"),
+        ("2024-01-01 09:00:00", "morning"),
+        ("2024-01-01 12:00:00", "noon"),
+        ("2024-01-01 14:00:00", "afternoon"),
+        ("2024-01-01 18:00:00", "evening"),
+        ("2024-01-01 20:00:00", "night"),
+    ],
+)
+def test_activity_name_uses_local_time(time: str, expected: str) -> None:
+    assert _activity_name("", time) == expected
+
+
+def test_activity_name_preserves_source_name() -> None:
+    assert _activity_name("  周末长途  ", "2024-01-01 08:00:00") == "周末长途"
 
 
 def test_missing_database_raises(tmp_path: Path) -> None:

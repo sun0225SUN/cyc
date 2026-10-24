@@ -1,0 +1,57 @@
+.ride-heatmap {
+  --heat-color: #2563eb;
+}
+
+.dark .ride-heatmap {
+  --heat-color: #fb923c;
+}
+
+.ride-heatmap-cell[data-level="0"] {
+  background: color-mix(in oklab, var(--foreground) 7%, transparent);
+}
+
+.ride-heatmap-cell[data-level="1"] {
+  background: color-mix(in oklab, var(--heat-color) 22%, transparent);
+}
+
+.ride-heatmap-cell[data-level="2"] {
+  background: color-mix(in oklab, var(--heat-color) 40%, transparent);
+}
+
+.ride-heatmap-cell[data-level="3"] {
+  background: color-mix(in oklab, var(--heat-color) 60%, transparent);
+}
+
+.ride-heatmap-cell[data-level="4"] {
+  background: color-mix(in oklab, var(--heat-color) 80%, transparent);
+}
+
+.ride-heatmap-cell[data-level="5"] {
+  background: var(--heat-color);
+}
+
+.ride-heatmap-tab {
+  border-color: color-mix(in oklab, var(--heat-color) 22%, var(--border));
+}
+
+.ride-heatmap-tab:hover {
+  border-color: color-mix(in oklab, var(--heat-color) 65%, transparent);
+  background: color-mix(in oklab, var(--heat-color) 12%, transparent);
+  color: var(--heat-color);
+}
+
+.ride-heatmap-tab[aria-pressed="true"] {
+  border-color: var(--heat-color);
+  background: var(--heat-color);
+  color: white;
+}
+
+.ride-heatmap-tab[aria-pressed="true"]:hover {
+  background: color-mix(in oklab, var(--heat-color) 88%, black);
+  color: white;
+}
+
+.ride-heatmap-cell[data-active="true"] {
+  outline: 2px solid var(--heat-color);
+  outline-offset: 2px;
+}

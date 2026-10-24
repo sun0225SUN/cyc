@@ -5,24 +5,29 @@ import type { Activity } from '@/entities/activity'
 import { mapboxToken } from '@/shared/config/mapbox'
 import { RideMap, Starfield } from '@/widgets/ride-map'
 import { PageSwitch } from './page-switch'
+import { RideDetail } from './ride-detail'
+import { RideExplorer } from './ride-explorer'
 
 type HomeDeckProps = {
   activities: Activity[]
   locale: string
   brand: ReactNode
-  list: ReactNode
 }
 
-export function HomeDeck({ activities, locale, brand, list }: HomeDeckProps) {
+export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
+  const [detail, setDetail] = useState<Activity | null>(null)
 
   useEffect(() => {
     const scroller = scrollerRef.current
     if (!scroller) return
 
     const updatePage = () => {
-      const next = scroller.scrollTop >= scroller.clientHeight * 0.5 ? 1 : 0
+      const next = Math.min(
+        1,
+        Math.max(0, Math.round(scroller.scrollTop / scroller.clientHeight)),
+      )
       setPage(next)
     }
 
@@ -50,13 +55,13 @@ export function HomeDeck({ activities, locale, brand, list }: HomeDeckProps) {
         event.altKey
       )
         return
-      if (event.key === 'PageDown' && page === 0) {
+      if (event.key === 'PageDown' && page < 1) {
         event.preventDefault()
-        scrollToPage(1)
+        scrollToPage(page + 1)
       }
-      if (event.key === 'PageUp' && page === 1) {
+      if (event.key === 'PageUp' && page > 0) {
         event.preventDefault()
-        scrollToPage(0)
+        scrollToPage(page - 1)
       }
     }
 
@@ -78,20 +83,37 @@ export function HomeDeck({ activities, locale, brand, list }: HomeDeckProps) {
             activities={activities}
             locale={locale}
             token={mapboxToken()}
+            onSelect={setDetail}
           />
           <div className='pointer-events-none absolute top-4 left-4 z-10'>
             {brand}
           </div>
         </section>
-        <section className='h-svh snap-start snap-always overflow-hidden'>
-          {list}
+        <section
+          data-data-page
+          className='h-svh snap-start snap-always overflow-y-auto overscroll-y-contain'
+        >
+          <RideExplorer
+            activities={activities}
+            locale={locale}
+            onSelect={setDetail}
+          />
         </section>
       </div>
       <PageSwitch
         page={page}
-        onPrevious={() => scrollToPage(0)}
-        onNext={() => scrollToPage(1)}
+        pageCount={2}
+        onPrevious={() => scrollToPage(Math.max(0, page - 1))}
+        onNext={() => scrollToPage(Math.min(1, page + 1))}
       />
+      {detail && (
+        <RideDetail
+          activity={detail}
+          locale={locale}
+          token={mapboxToken()}
+          onBack={() => setDetail(null)}
+        />
+      )}
     </div>
   )
 }

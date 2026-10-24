@@ -7,6 +7,15 @@
   "site": {
     "name": "cyc"
   },
+  "activityNames": {
+    "lateNight": "Late-night Ride",
+    "earlyMorning": "Early Morning Ride",
+    "morning": "Morning Ride",
+    "noon": "Noon Ride",
+    "afternoon": "Afternoon Ride",
+    "evening": "Evening Ride",
+    "night": "Night Ride"
+  },
   "map": {
     "missingToken": "Set NEXT_PUBLIC_MAPBOX_TOKEN to show the map.",
     "globe": "Globe",
@@ -21,6 +30,7 @@
     "title": "Rides",
     "count": "{count, plural, one {# ride} other {# rides}}",
     "date": "Date",
+    "name": "Name",
     "distance": "Distance (km)",
     "time": "Moving time",
     "speed": "Speed (km/h)",
@@ -30,7 +40,43 @@
     "page": "Page {page} of {pages}",
     "previousPage": "Previous rides page",
     "nextPage": "Next rides page",
-    "previous": "Map",
-    "next": "Ride list"
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "heatmap": {
+    "title": "Ride heatmap",
+    "summary": "{count, plural, one {# ride} other {# rides}} · {distance} km",
+    "yearSelection": "Select year",
+    "all": "All",
+    "dayDetail": "{date}: {count, plural, one {# ride} other {# rides}}, {distance} km",
+    "less": "Less",
+    "more": "More",
+    "jan": "Jan",
+    "feb": "Feb",
+    "mar": "Mar",
+    "apr": "Apr",
+    "may": "May",
+    "jun": "Jun",
+    "jul": "Jul",
+    "aug": "Aug",
+    "sep": "Sep",
+    "oct": "Oct",
+    "nov": "Nov",
+    "dec": "Dec",
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat"
+  },
+  "rideDetail": {
+    "back": "Back to rides",
+    "untitled": "Untitled ride",
+    "distance": "Distance",
+    "movingTime": "Moving time",
+    "averageSpeed": "Average speed",
+    "elevation": "Elevation gain"
   }
 }

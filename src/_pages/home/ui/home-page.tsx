@@ -1,7 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { loadActivities } from '@/entities/activity/index.server'
 import { Brand } from '@/shared/ui/logo'
-import { RideList } from '@/widgets/ride-list'
 import { HomeDeck } from './home-deck'
 
 export async function generateMetadata() {
@@ -13,12 +12,5 @@ export async function HomePage() {
   const locale = await getLocale()
   const activities = await loadActivities()
 
-  return (
-    <HomeDeck
-      activities={activities}
-      locale={locale}
-      brand={<Brand />}
-      list={<RideList activities={activities} locale={locale} />}
-    />
-  )
+  return <HomeDeck activities={activities} locale={locale} brand={<Brand />} />
 }

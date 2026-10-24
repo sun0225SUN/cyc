@@ -16,6 +16,7 @@ import {
   mapLanguage,
 } from '@/shared/config/mapbox'
 import { MapCameraBar, MapToolbar } from './map-toolbar'
+import { Starfield } from './starfield'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import './mapbox.css'
 
@@ -49,6 +50,7 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
   const mapData = useMemo(() => activitiesToGeoJson(activities), [activities])
   const appearance =
     resolvedTheme === 'dark' || resolvedTheme === 'light' ? resolvedTheme : null
+  const showStars = (appearance ?? appearanceFromDocument()) === 'dark'
 
   useEffect(() => {
     const container = containerRef.current
@@ -74,6 +76,7 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
     }
     map.on('style.load', () => {
       const theme = styleRef.current === mapboxStyles.dark ? 'dark' : 'light'
+      paintSpace(map, theme)
       drawRides(map, mapData, lineColor[theme])
       frameOnce()
     })
@@ -167,9 +170,12 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
   }, [appearance])
 
   return (
-    <div className='ride-map relative h-svh w-full'>
+    <div
+      className={`ride-map relative h-svh w-full ${showStars ? 'bg-black' : 'bg-[#f4f7fb]'}`}
+    >
+      {token && showStars ? <Starfield /> : null}
       {token ? (
-        <div ref={containerRef} className='h-svh w-full' />
+        <div ref={containerRef} className='relative z-10 h-svh w-full' />
       ) : (
         <div className='bg-muted text-muted-foreground flex h-svh items-center justify-center px-6 text-center text-sm'>
           {t('missingToken')}
@@ -192,6 +198,17 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
       ) : null}
     </div>
   )
+}
+
+function paintSpace(map: mapboxgl.Map, theme: MapAppearance) {
+  const space = theme === 'dark' ? 'rgba(0, 0, 0, 0)' : '#f4f7fb'
+  map.setFog({
+    color: space,
+    'high-color': space,
+    'horizon-blend': 0,
+    'space-color': space,
+    'star-intensity': 0,
+  })
 }
 
 function frameWholeEarth(map: mapboxgl.Map, bounds: RideMapData['bounds']) {

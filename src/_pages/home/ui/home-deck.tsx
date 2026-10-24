@@ -156,21 +156,25 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
             />
           </section>
         </div>
-        <div className='pointer-events-none fixed inset-x-4 bottom-4 z-30 flex items-center justify-between'>
-          <PageSwitch
-            page={page}
-            pageCount={2}
-            onPrevious={() => scrollToPage(Math.max(0, page - 1))}
-            onNext={() => scrollToPage(Math.min(1, page + 1))}
-          />
-          {page === 0 && camera ? (
-            <MapCameraBar
-              bearing={camera.bearing}
-              onZoomIn={camera.zoomIn}
-              onZoomOut={camera.zoomOut}
-              onLocate={camera.locate}
-              onResetNorth={camera.resetNorth}
+        <div className='pointer-events-none fixed inset-x-4 bottom-4 z-30'>
+          <div className='absolute bottom-0 left-0'>
+            <PageSwitch
+              page={page}
+              pageCount={2}
+              onPrevious={() => scrollToPage(Math.max(0, page - 1))}
+              onNext={() => scrollToPage(Math.min(1, page + 1))}
             />
+          </div>
+          {page === 0 && camera ? (
+            <div className='absolute right-0 bottom-0'>
+              <MapCameraBar
+                bearing={camera.bearing}
+                onZoomIn={camera.zoomIn}
+                onZoomOut={camera.zoomOut}
+                onLocate={camera.locate}
+                onResetNorth={camera.resetNorth}
+              />
+            </div>
           ) : null}
         </div>
       </div>

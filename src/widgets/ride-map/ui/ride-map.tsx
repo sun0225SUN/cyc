@@ -217,8 +217,9 @@ export function RideMap({
       locate,
       resetNorth,
     })
-    return () => onCameraReady?.(null)
   }, [bearing, locate, onCameraReady, resetNorth, token, zoomBy])
+
+  useEffect(() => () => onCameraReady?.(null), [onCameraReady])
 
   const toggleProjection = useCallback(() => {
     const map = mapRef.current

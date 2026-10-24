@@ -8,6 +8,7 @@
     "build": "bun --bun next build",
     "start": "bun --bun next start",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "lint": "biome check && bun run tailwind:lint",
     "format": "biome check --write",
     "tailwind:lint": "tailwind-lint --config src/_app/styles/globals.css",

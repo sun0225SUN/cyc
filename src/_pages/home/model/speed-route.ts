@@ -4,6 +4,7 @@ import {
   SPEED_MAX_KMH,
   SPEED_MIN_KMH,
   SPEED_STOPS,
+  type SpeedStop,
 } from '@/shared/config/speed-color'
 import { routeDistances } from './lap-route'
 
@@ -25,8 +26,8 @@ export function hasSpeedValues(
 
 export function colorAtSpeed(kmh: number) {
   const value = Math.min(SPEED_MAX_KMH, Math.max(SPEED_MIN_KMH, kmh))
-  let from = SPEED_STOPS[0]
-  let to = SPEED_STOPS[SPEED_STOPS.length - 1]
+  let from: SpeedStop = SPEED_STOPS[0]
+  let to: SpeedStop = SPEED_STOPS[SPEED_STOPS.length - 1]
   for (let index = 1; index < SPEED_STOPS.length; index += 1) {
     const stop = SPEED_STOPS[index]
     if (!stop || value > stop[0]) continue

@@ -9,6 +9,8 @@ export const SPEED_STOPS = [
   [40, '#e02424'],
 ] as const
 
+export type SpeedStop = (typeof SPEED_STOPS)[number]
+
 export const SPEED_GRADIENT = SPEED_STOPS.map(
   ([kmh, color]) => `${color} ${(kmh / SPEED_MAX_KMH) * 100}%`,
 ).join(', ')

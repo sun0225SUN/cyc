@@ -10,6 +10,10 @@ pre-commit:
       run: bunx biome format --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
+    typecheck:
+      glob: "*.{ts,tsx,cts,mts}"
+      run: bun run typecheck
+
     python-lint:
       glob: "*.py"
       run: uv run --project backend ruff check {staged_files} && uv run --project backend black --check {staged_files}

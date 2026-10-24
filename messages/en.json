@@ -16,5 +16,21 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "locate": "Locate"
+  },
+  "rides": {
+    "title": "Rides",
+    "count": "{count, plural, one {# ride} other {# rides}}",
+    "date": "Date",
+    "distance": "Distance (km)",
+    "time": "Moving time",
+    "speed": "Speed (km/h)",
+    "elevation": "Elevation (m)",
+    "showing": "{first}–{last} of {count} rides",
+    "pagination": "Ride list pagination",
+    "page": "Page {page} of {pages}",
+    "previousPage": "Previous rides page",
+    "nextPage": "Next rides page",
+    "previous": "Map",
+    "next": "Ride list"
   }
 }

@@ -8,6 +8,7 @@
 .ride-map .mapboxgl-ctrl-attrib-button,
 .ride-map .mapboxgl-compact,
 .ride-map .mapboxgl-ctrl-bottom-left,
-.ride-map .mapboxgl-ctrl-bottom-right {
+.ride-map .mapboxgl-ctrl-bottom-right,
+.ride-map .mapboxgl-ctrl-compass {
   display: none;
 }

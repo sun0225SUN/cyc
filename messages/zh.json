@@ -16,5 +16,21 @@
     "zoomIn": "放大",
     "zoomOut": "缩小",
     "locate": "定位"
+  },
+  "rides": {
+    "title": "骑行记录",
+    "count": "{count} 次骑行",
+    "date": "日期",
+    "distance": "距离（公里）",
+    "time": "移动时间",
+    "speed": "速度（公里/小时）",
+    "elevation": "爬升（米）",
+    "showing": "第 {first}–{last} 条，共 {count} 条",
+    "pagination": "骑行记录分页",
+    "page": "第 {page} / {pages} 页",
+    "previousPage": "上一页骑行记录",
+    "nextPage": "下一页骑行记录",
+    "previous": "地图",
+    "next": "骑行列表"
   }
 }

@@ -16,7 +16,6 @@ import {
   mapLanguage,
 } from '@/shared/config/mapbox'
 import { MapCameraBar, MapToolbar } from './map-toolbar'
-import { Starfield } from './starfield'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import './mapbox.css'
 
@@ -50,7 +49,6 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
   const mapData = useMemo(() => activitiesToGeoJson(activities), [activities])
   const appearance =
     resolvedTheme === 'dark' || resolvedTheme === 'light' ? resolvedTheme : null
-  const showStars = (appearance ?? appearanceFromDocument()) === 'dark'
 
   useEffect(() => {
     const container = containerRef.current
@@ -170,10 +168,7 @@ export function RideMap({ activities, locale, token }: RideMapProps) {
   }, [appearance])
 
   return (
-    <div
-      className={`ride-map relative h-svh w-full ${showStars ? 'bg-black' : 'bg-[#f4f7fb]'}`}
-    >
-      {token && showStars ? <Starfield /> : null}
+    <div className='ride-map relative h-svh w-full bg-transparent'>
       {token ? (
         <div ref={containerRef} className='relative z-10 h-svh w-full' />
       ) : (

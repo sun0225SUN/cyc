@@ -1,4 +1,7 @@
 import type { RideLap } from '@/entities/activity'
+import type messages from '../../../../messages/en.json'
+
+type RideDetailKey = keyof typeof messages.rideDetail
 
 export type LapColumnKey =
   | 'index'
@@ -33,7 +36,7 @@ export type LapColumnKey =
 
 export type LapColumn = {
   key: LapColumnKey
-  label: string
+  label: RideDetailKey
   always?: boolean
 }
 
@@ -78,5 +81,5 @@ export function visibleLapColumns(laps: RideLap[]) {
 }
 
 function hasLapValue(value: RideLap[keyof RideLap]) {
-  return value != null && value !== ''
+  return value != null
 }

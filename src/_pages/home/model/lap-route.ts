@@ -90,7 +90,7 @@ function pointAt(
   coordinates: [number, number][],
   lengths: number[],
   target: number,
-) {
+): [number, number] | undefined {
   const last = coordinates[coordinates.length - 1]
   const total = lengths[lengths.length - 1] ?? 0
   if (target <= 0) return coordinates[0]

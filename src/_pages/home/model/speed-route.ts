@@ -26,16 +26,18 @@ export function hasSpeedValues(
 
 export function colorAtSpeed(kmh: number) {
   const value = Math.min(SPEED_MAX_KMH, Math.max(SPEED_MIN_KMH, kmh))
-  let from: SpeedStop = SPEED_STOPS[0]
-  let to: SpeedStop = SPEED_STOPS[SPEED_STOPS.length - 1]
+  const first = SPEED_STOPS[0]
+  const last = SPEED_STOPS[SPEED_STOPS.length - 1]
+  if (!first || !last) return '#14d45a'
+  let from: SpeedStop = first
+  let to: SpeedStop = last
   for (let index = 1; index < SPEED_STOPS.length; index += 1) {
     const stop = SPEED_STOPS[index]
     if (!stop || value > stop[0]) continue
-    from = SPEED_STOPS[index - 1]
+    from = SPEED_STOPS[index - 1] ?? from
     to = stop
     break
   }
-  if (!from || !to) return '#14d45a'
   const span = to[0] - from[0]
   return mixHex(from[1], to[1], span === 0 ? 0 : (value - from[0]) / span)
 }

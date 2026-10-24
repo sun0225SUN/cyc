@@ -22,10 +22,12 @@ export function clusterTracks<T extends ClusterableTrack>(
 
   const decoded = ordered.map((track) => {
     const coords = decodeTrack(track.summary_polyline)
-    if (coords.length < 2) return null
+    const start = coords[0]
+    const end = coords.at(-1)
+    if (!start || !end) return null
     return {
-      start: coords[0],
-      end: coords[coords.length - 1],
+      start,
+      end,
       distBucket: Math.round(track.distance / DIST_BUCKET_M),
     }
   })
@@ -35,12 +37,20 @@ export function clusterTracks<T extends ClusterableTrack>(
   for (let i = 0; i < ordered.length; i++) {
     if (used.has(i)) continue
     const current = decoded[i]
-    if (!current) continue
-    const indexes = [ordered[i].index]
+    const currentTrack = ordered[i]
+    if (!current || !currentTrack) continue
+    const indexes = [currentTrack.index]
     for (let j = i + 1; j < ordered.length; j++) {
       if (used.has(j)) continue
       const candidate = decoded[j]
-      if (!candidate || current.distBucket !== candidate.distBucket) continue
+      const candidateTrack = ordered[j]
+      if (
+        !candidate ||
+        !candidateTrack ||
+        current.distBucket !== candidate.distBucket
+      ) {
+        continue
+      }
       const startClose =
         Math.abs(current.start[0] - candidate.start[0]) < START_END_DEG &&
         Math.abs(current.start[1] - candidate.start[1]) < START_END_DEG
@@ -49,12 +59,12 @@ export function clusterTracks<T extends ClusterableTrack>(
         Math.abs(current.end[1] - candidate.end[1]) < START_END_DEG
       if (startClose && endClose) {
         used.add(j)
-        indexes.push(ordered[j].index)
+        indexes.push(candidateTrack.index)
       }
     }
     used.add(i)
     clusters.push({
-      index: ordered[i].index,
+      index: currentTrack.index,
       count: indexes.length,
       indexes,
     })

@@ -90,7 +90,7 @@ function YearGrid({
           {data.weeks.map((week, weekIndex) => (
             <span key={week[0]?.date} className='whitespace-nowrap'>
               {monthStarts.has(weekIndex)
-                ? t(MONTHS[monthStarts.get(weekIndex) ?? 0])
+                ? t(MONTHS[monthStarts.get(weekIndex) ?? 0] ?? 'jan')
                 : ''}
             </span>
           ))}

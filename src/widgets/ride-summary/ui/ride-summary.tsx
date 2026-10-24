@@ -69,12 +69,15 @@ export function RideSummary({
       ),
     [activities, activePeriod, selectedYear],
   )
-  const labels = Object.fromEntries(
-    data.map((point) => [
+  const labels: Record<string, string> = {}
+  for (const point of data) {
+    labels[point.key] = formatPointLabel(
       point.key,
-      formatPointLabel(point.key, activePeriod, locale, spanYears),
-    ]),
-  )
+      activePeriod,
+      locale,
+      spanYears,
+    )
+  }
 
   return (
     <div id='ride-summary' className='ride-summary'>
@@ -204,7 +207,7 @@ function formatPointLabel(
   if (grain === 'month') {
     const year = key.slice(0, 4)
     const month = Number(key.slice(5, 7))
-    const name = zh ? `${month}月` : ENGLISH_MONTHS[month - 1]
+    const name = zh ? `${month}月` : (ENGLISH_MONTHS[month - 1] ?? key)
     return spanYears ? (zh ? `${year}年${name}` : `${name} ${year}`) : name
   }
   if (grain === 'week') return spanYears ? key.replace('-', ' ') : key.slice(5)
@@ -213,6 +216,6 @@ function formatPointLabel(
   const month = Number(key.slice(5, 7))
   if (zh)
     return spanYears ? `${year}年${month}月${day}日` : `${month}月${day}日`
-  const name = `${ENGLISH_MONTHS[month - 1]} ${day}`
+  const name = `${ENGLISH_MONTHS[month - 1] ?? key} ${day}`
   return spanYears ? `${name}, ${year}` : name
 }

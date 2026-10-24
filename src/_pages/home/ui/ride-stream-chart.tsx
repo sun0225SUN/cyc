@@ -328,8 +328,9 @@ function formatStat(key: SeriesKey, value: number | null, locale: string) {
 }
 
 function nearestPoint(points: StreamPoint[], x: number) {
-  if (points.length === 0) return null
-  let best = points[0]
+  const first = points[0]
+  if (!first) return null
+  let best = first
   let distance = Math.abs(best.x - x)
   for (const point of points) {
     const next = Math.abs(point.x - x)

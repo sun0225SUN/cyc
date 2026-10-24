@@ -1,29 +1,91 @@
-# cyc
+<div align="center">
+  <p>
+    <img src="./readme/images/logo.png" alt="cyc" width="100" style="border-radius: 24px;" />
+  </p>
+  <h2>Create a personal cycling home page</h2>
 
-基于 Next.js App Router 的前端应用。代码按 [Feature-Sliced Design](https://feature-sliced.design) v2.1 组织，Next.js 接法见 [Usage with Next.js](https://fsd.how/docs/guides/tech/with-nextjs/)。Next.js 路由在仓库根目录的 `app/`。FSD 的 app、pages 层写成 `src/_app`、`src/_pages`。
+  English | [简体中文](./README_zh.md)
 
-Agent 在改代码时从 [`AGENTS.md`](AGENTS.md) 进入，按主题阅读 [`docs/agent/`](docs/agent/)。
+  <img alt="GitHub License" src="https://img.shields.io/github/license/sun0225SUN/cyc">
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/sun0225SUN/cyc?style=flat">
+  <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/sun0225SUN/cyc?style=flat">
+  <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sun0225SUN/cyc">
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/sun0225SUN/cyc">
+  <img alt="Page views" src="https://komarev.com/ghpvc/?username=cyc&label=Views&color=orange&style=flat" />
+</div>
 
-## 技术栈
+## ✨ Features
 
-- Next.js 16、React 19、TypeScript
-- Bun
-- next-intl（`en` 为默认语言，不带前缀；`zh` 使用 `/zh`）
-- Tailwind CSS 4、shadcn/ui
-- Mapbox GL
-- Biome、Lefthook、Commitizen（cz-git）、Vitest
+- [x] 🌓 Dark and light themes
+- [x] 🌐 English and 简体中文
+- [x] 🌍 Mapbox globe of every ride
+- [x] 📅 Year heatmap, activity list, and clustered tracks
+- [x] 📊 Summary charts by year, month, week, and day
+- [x] 🚴 Nightly import from iGPSPORT
 
-## 开发
+## 🔨 Tech Stack
+
+- ⚡ Framework - [Next.js](https://nextjs.org)
+- 🧩 Language - [TypeScript](https://www.typescriptlang.org)
+- 🌬️ Styling - [Tailwind CSS](https://tailwindcss.com)
+- 🎛️ UI Library - [shadcn/ui](https://ui.shadcn.com)
+- 🗺️ Maps - [Mapbox](https://mapbox.com)
+- 🌐 Multi-language - [next-intl](https://next-intl.dev)
+- 📈 Charts - [Recharts](https://recharts.org)
+- 🧹 Formatter and linter - [Biome](https://biomejs.dev)
+- 🪝 Git hooks - [Lefthook](https://lefthook.dev)
+- 🧪 Tests - [Vitest](https://vitest.dev)
+- 📊 Analytics - [Umami](https://umami.is)
+
+## 🚀 Getting Started
+
+### Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sun0225SUN/cyc)
+
+> [!warning]
+> Configure the required environment variables before running or deploying the project.
+
+```bash
+# Mapbox. Required to draw the globe.
+NEXT_PUBLIC_MAPBOX_TOKEN=
+
+# Umami. Optional.
+NEXT_PUBLIC_UMAMI_HOST=
+NEXT_PUBLIC_UMAMI_WEBSITE_ID=
+```
+
+<details>
+<summary><strong>Mapbox</strong></summary>
+
+Create a public token at [Mapbox access tokens](https://account.mapbox.com/access-tokens/).
+
+</details>
+
+## 💻 Local development
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/sun0225SUN/cyc.git
+cd cyc
+```
+
+2. Create `.env.local` in the repository root and set the variables from [Getting Started](#-getting-started).
+
+3. Install dependencies
 
 ```bash
 bun install
-cp .env.example .env.local
-# 填入 NEXT_PUBLIC_MAPBOX_TOKEN
-# 生产环境再填 NEXT_PUBLIC_UMAMI_HOST 和 NEXT_PUBLIC_UMAMI_WEBSITE_ID
-bun dev
 ```
 
-开发服务器默认在 [http://localhost:3000](http://localhost:3000)。
+4. Start the development server
+
+```bash
+bun run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). English is the default locale. Chinese lives at `/zh`.
 
 ```bash
 bun run build
@@ -32,19 +94,15 @@ bun run format
 bun run test
 ```
 
-提交使用仓库里的 cz-git 配置：标题形如 `:sparkles: feat(scope): subject`。`pre-commit` 会格式化已暂存的前端文件，并对已暂存的 Python 文件跑 Ruff 和 Black。`commit-msg` 会跑 Commitlint。`git push` 之前 Lefthook 会跑前端测试；这次推送包含 `backend/` 时，还会跑 Python 测试。失败则不会推送。
+## 🚴 Ride data
 
-## 后端
-
-活动数据的获取和处理放在 `backend/`，不进页面的 `src/`。当前从 iGPSPORT 下载 FIT，解析进 SQLite，再导出 `data/activities.json`。首页只用 Mapbox 画这些轨迹，浅色是 `light-v11`，深色是 `dark-v11`。说明见 [`backend/README.md`](backend/README.md)。
+Activity files stay in `backend/`. The page reads `data/activities.json`.
 
 ```bash
 cd backend
 cp .env.example .env
-uv sync
-uv run igpsport-sync
-uv run fit-parse
-uv run export-activities
+# set IGPSPORT_USERNAME and IGPSPORT_PASSWORD
+make refresh
 ```
 
 ```bash
@@ -52,39 +110,30 @@ make -C backend check
 make -C backend test
 ```
 
-## 目录
+The `Refresh rides` Action runs `make refresh` at midnight in Asia/Shanghai and commits `data/activities.json` when it changes. Set `IGPSPORT_USERNAME`, `IGPSPORT_PASSWORD` (or `IGPSPORT_ACCESS_TOKEN`), and an `ACTION_TOKEN` that can push `main`. You can also run the workflow by hand.
+
+More detail: [`backend/README.md`](backend/README.md). Chinese: [`backend/README_zh.md`](backend/README_zh.md).
+
+## 📁 Project structure
+
+The UI follows [Feature-Sliced Design](https://feature-sliced.design) v2.1.
 
 ```text
-app/                       Next.js 路由，只做组合和框架入口
-proxy.ts                   Next.js 代理
-messages/                  文案目录，由 next-intl 直接加载
-src/_app/                  FSD app：provider、全局样式、全应用的路由和 i18n
-src/_pages/<slice>/        一个路由对应一个切片
-src/widgets/<slice>/       跨页面复用的大块界面
-src/features/<slice>/      复用的用户动作
-src/entities/<slice>/      业务实体
-src/shared/                不含产品行为的基础代码
+app/                 Next.js routes
+messages/            next-intl catalogs
+data/activities.json Exported rides
+backend/             iGPSPORT download, FIT parse, JSON export
+src/_app/            providers, styles, i18n
+src/_pages/          one slice per route
+src/widgets/         large reusable blocks
+src/features/        reusable user actions
+src/entities/        business entities
+src/shared/          UI kit and config
 ```
 
-层从上到下是 `_app`、`_pages`、`widgets`、`features`、`entities`、`shared`。文件只能引用自己所在的切片，以及更低的层。同一层的切片互不引用。`_app` 和 `shared` 没有切片，里面的 segment 可以互相引用。
+Agent notes live in [`AGENTS.md`](AGENTS.md) and [`docs/agent/`](docs/agent/).
 
-切片对外只通过 `index.ts`。切片内部用相对路径引用具体文件。`shared/ui` 和 `shared/lib` 按组件或主题各自提供公开 API，例如 `@/shared/ui/button`。
-
-常用 segment：
-
-| Segment  | 内容                          |
-| -------- | ----------------------------- |
-| `ui`     | 界面                          |
-| `model`  | 类型、schema、store、业务逻辑 |
-| `api`    | 请求与数据映射                |
-| `lib`    | 该切片内部使用的库代码        |
-| `config` | 配置和功能开关                |
-
-不使用 `processes` 层，也不把 `components`、`hooks`、`utils`、`types` 当作 segment 名。
-
-新增模块直接放进对应的层。分层约束写在 [`docs/agent/architecture.md`](docs/agent/architecture.md)。
-
-## 贡献者
+## 👥 Contributors
 
 <!-- readme: collaborators,contributors -start -->
 <table>
@@ -101,3 +150,17 @@ src/shared/                不含产品行为的基础代码
 	<tbody>
 </table>
 <!-- readme: collaborators,contributors -end -->
+
+## 📝 License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+## 🤝 Contributing
+
+Contributions are welcome. Open an issue or a pull request.
+
+Commit titles follow `:emoji: type(scope): subject`, for example `:sparkles: feat(map): add activity heatmap`. Lefthook formats staged files, Commitlint checks the message, and `pre-push` runs the tests.
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=sun0225SUN/cyc&type=Date)](https://www.star-history.com/#sun0225SUN/cyc&Date)

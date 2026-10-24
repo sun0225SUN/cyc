@@ -7,7 +7,7 @@ pre-commit:
 
     format-staged:
       glob: "*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,json,jsonc,css}"
-      run: bunx biome format --write {staged_files}
+      run: bunx biome format --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
     python-lint:

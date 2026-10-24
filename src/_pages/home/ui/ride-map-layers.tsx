@@ -1,29 +1,12 @@
 'use client'
 
 import { cn } from 'cn'
-import { EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
-import {
-  type RideMapStyleId,
-  rideMapStyleIds,
-  rideMapStylePreview,
-} from '@/shared/config/mapbox'
+import type { RideMapStyleId } from '@/shared/config/mapbox'
+import { MapStylePicker } from './map-style-picker'
 
-const STYLE_LABEL = {
-  privacy: 'stylePrivacy',
-  standard: 'styleStandard',
-  standardSatellite: 'styleStandardSatellite',
-  streets: 'styleStreets',
-  outdoors: 'styleOutdoors',
-  light: 'styleLight',
-  dark: 'styleDark',
-  satellite: 'styleSatellite',
-  navigationDay: 'styleNavigationDay',
-  navigationNight: 'styleNavigationNight',
-} as const
-
-const DEFAULT_HEIGHT = 340
+const DEFAULT_HEIGHT = 448
 const MIN_HEIGHT = 176
 const CLOSE_HEIGHT = 132
 
@@ -36,6 +19,8 @@ type RideMapLayersProps = {
   onShowLaps: (value: boolean) => void
   showEnds: boolean
   onShowEnds: (value: boolean) => void
+  colorBySpeed?: boolean
+  onColorBySpeed?: (value: boolean) => void
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -49,6 +34,8 @@ export function RideMapLayers({
   onShowLaps,
   showEnds,
   onShowEnds,
+  colorBySpeed,
+  onColorBySpeed,
   open,
   onOpenChange,
 }: RideMapLayersProps) {
@@ -190,53 +177,13 @@ export function RideMapLayers({
         <span />
       </button>
       <div className='min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-6'>
-        <h2
-          id='ride-map-style-title'
-          className='text-2xl font-medium tracking-tight'
-        >
-          {t('mapStyle')}
-        </h2>
-        <div className='mt-5 flex flex-wrap gap-x-2.5 gap-y-3'>
-          {rideMapStyleIds.map((id) => {
-            const selected = styleId === id
-            const preview = rideMapStylePreview(id, token, center)
-            return (
-              <button
-                key={id}
-                type='button'
-                aria-pressed={selected}
-                onClick={() => onStyleId(id)}
-                data-umami-event='ride-map-style'
-                data-umami-event-style={id}
-                className='flex w-11 cursor-pointer flex-col items-center gap-1.5'
-              >
-                <span
-                  className={cn(
-                    'bg-muted grid size-9 shrink-0 place-items-center rounded-md bg-cover bg-center',
-                    selected &&
-                      'ring-foreground ring-offset-background ring-2 ring-offset-1',
-                  )}
-                  style={
-                    preview
-                      ? { backgroundImage: `url("${preview}")` }
-                      : undefined
-                  }
-                >
-                  {id === 'privacy' ? (
-                    <EyeOff
-                      size={16}
-                      strokeWidth={2}
-                      className='text-muted-foreground'
-                    />
-                  ) : null}
-                </span>
-                <span className='text-muted-foreground text-center text-[10px] leading-tight'>
-                  {t(STYLE_LABEL[id])}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <MapStylePicker
+          token={token}
+          center={center}
+          styleId={styleId}
+          onStyleId={onStyleId}
+          titleId='ride-map-style-title'
+        />
         <div className='mt-8 flex flex-col gap-3'>
           <LayerSwitch
             label={t('showLapMarkers')}
@@ -250,13 +197,21 @@ export function RideMapLayers({
             onCheckedChange={onShowEnds}
             event='ride-end-markers'
           />
+          {onColorBySpeed ? (
+            <LayerSwitch
+              label={t('colorBySpeed')}
+              checked={Boolean(colorBySpeed)}
+              onCheckedChange={onColorBySpeed}
+              event='ride-speed-color'
+            />
+          ) : null}
         </div>
       </div>
     </div>
   )
 }
 
-function LayerSwitch({
+export function LayerSwitch({
   label,
   checked,
   onCheckedChange,

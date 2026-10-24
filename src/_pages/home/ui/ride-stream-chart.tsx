@@ -83,7 +83,7 @@ export function RideStreamChart({
   if (available.length === 0 || points.length === 0) return null
 
   return (
-    <section className='mt-8 min-w-0'>
+    <section id='ride-track-analysis' className='mt-8 min-w-0'>
       <h2 className='text-xl font-medium tracking-tight'>
         {t('trackAnalysis')}
       </h2>

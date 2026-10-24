@@ -43,6 +43,39 @@ function useDesktop() {
 
 const detailCache = new Map<number, RideDetailData | null>()
 
+function revealLapContext(index: number | null) {
+  if (index == null) return
+  requestAnimationFrame(() => {
+    const chart = document.getElementById('ride-track-analysis')
+    const row = document.getElementById(`ride-lap-${index}`)
+    const root =
+      chart?.closest('.overflow-y-auto') ?? row?.closest('.overflow-y-auto')
+    if (!(root instanceof HTMLElement)) {
+      chart?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      return
+    }
+    const rootBox = root.getBoundingClientRect()
+    const chartBox = chart?.getBoundingClientRect()
+    const rowBox = row?.getBoundingClientRect()
+    const chartVisible =
+      chartBox != null &&
+      chartBox.top >= rootBox.top &&
+      chartBox.bottom <= rootBox.bottom
+    const rowVisible =
+      rowBox != null &&
+      rowBox.top >= rootBox.top &&
+      rowBox.bottom <= rootBox.bottom
+    if (chartVisible && rowVisible) return
+    if (chartBox && rowBox && rowBox.bottom - chartBox.top <= rootBox.height) {
+      const top = chartBox.top - rootBox.top + root.scrollTop - 8
+      root.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+      return
+    }
+    row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  })
+}
+
 async function loadCachedRideDetail(id: number) {
   if (detailCache.has(id)) return detailCache.get(id) ?? null
   const next = await loadRideDetail(id)
@@ -147,7 +180,7 @@ export function RideDetail({
             role='status'
             aria-label={t('loading')}
           >
-            <span className='border-foreground/15 size-10 animate-spin rounded-full border-2 border-t-ride' />
+            <span className='border-foreground/15 border-t-ride size-10 animate-spin rounded-full border-2' />
           </div>
         ) : (
           <>
@@ -222,9 +255,13 @@ export function RideDetail({
                 <RideRoutePreview
                   activity={activity}
                   laps={detail?.laps ?? []}
+                  streams={detail?.streams}
                   selectedLap={selectedLap}
                   token={token}
-                  onSelectLap={setSelectedLap}
+                  onSelectLap={(index) => {
+                    setSelectedLap(index)
+                    revealLapContext(index)
+                  }}
                 />
               ) : null}
             </div>

@@ -19,8 +19,9 @@ import {
 } from '@/entities/activity'
 import {
   type MapAppearance,
-  mapboxStyles,
   mapLanguage,
+  type RideMapStyleId,
+  rideMapStyle,
 } from '@/shared/config/mapbox'
 import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
 import { MapToolbar } from './map-toolbar'
@@ -31,9 +32,17 @@ export type RideMapCamera = {
   bearing: number
   zoomIn: () => void
   zoomOut: () => void
-  locate: () => void
   resetNorth: () => void
 }
+
+export type RideSpeedLine = {
+  id: number
+  coordinates: [number, number][]
+  stops: Array<number | string>
+}
+
+const RIDE_LINE = 4
+const RIDE_LINE_HOVER = 6
 
 type RideMapProps = {
   activities: Activity[]
@@ -42,6 +51,9 @@ type RideMapProps = {
   brand?: ReactNode
   onSelect?: (activity: Activity) => void
   onCameraReady?: (camera: RideMapCamera | null) => void
+  colorBySpeed?: boolean
+  styleId?: RideMapStyleId
+  speedLines?: RideSpeedLine[]
 }
 
 export function RideMap({
@@ -51,6 +63,9 @@ export function RideMap({
   brand,
   onSelect,
   onCameraReady,
+  colorBySpeed = false,
+  styleId = 'dark',
+  speedLines = [],
 }: RideMapProps) {
   const t = useTranslations('map')
   const { resolvedTheme } = useTheme()
@@ -64,6 +79,12 @@ export function RideMap({
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [bearing, setBearing] = useState(0)
   const mapData = useMemo(() => activitiesToGeoJson(activities), [activities])
+  const colorBySpeedRef = useRef(colorBySpeed)
+  colorBySpeedRef.current = colorBySpeed
+  const speedLinesRef = useRef(speedLines)
+  speedLinesRef.current = speedLines
+  const styleIdRef = useRef(styleId)
+  styleIdRef.current = styleId
   const appearance =
     resolvedTheme === 'dark' || resolvedTheme === 'light' ? resolvedTheme : null
 
@@ -72,12 +93,15 @@ export function RideMap({
     if (!container || !token) return
 
     const initial = appearanceFromDocument()
-    const style = mapboxStyles[initial]
-    styleRef.current = style
+    const initialStyle = styleIdRef.current
+    styleRef.current =
+      initialStyle === 'privacy' ? `privacy:${initial}` : initialStyle
     mapboxgl.accessToken = token
     const map = new mapboxgl.Map({
       container,
-      style,
+      style: rideMapStyle(initialStyle, initial) as
+        | string
+        | mapboxgl.StyleSpecification,
       projection: 'globe',
       center: [105, 30],
       zoom: 1,
@@ -93,24 +117,14 @@ export function RideMap({
     map.on('mousemove', 'rides-hit', (event) => {
       const id = event.features?.[0]?.id
       if (id === undefined || id === hoveredRideId) return
-      if (hoveredRideId !== null) {
-        map.setFeatureState(
-          { source: 'rides', id: hoveredRideId },
-          { hover: false },
-        )
-      }
+      hoverRide(map, hoveredRideId, false)
       hoveredRideId = id
-      map.setFeatureState({ source: 'rides', id }, { hover: true })
+      hoverRide(map, id, true)
     })
     map.on('mouseleave', 'rides-hit', () => {
       map.getCanvas().style.cursor = ''
-      if (hoveredRideId !== null) {
-        map.setFeatureState(
-          { source: 'rides', id: hoveredRideId },
-          { hover: false },
-        )
-        hoveredRideId = null
-      }
+      hoverRide(map, hoveredRideId, false)
+      hoveredRideId = null
     })
     map.on('click', 'rides-hit', (event) => {
       const id = Number(event.features?.[0]?.properties?.id)
@@ -137,6 +151,12 @@ export function RideMap({
       const theme = appearanceFromDocument()
       paintSpace(map, theme)
       drawRides(map, mapData, accentColor(theme))
+      drawSpeedLines(
+        map,
+        speedLinesRef.current,
+        styleUsesSlot(styleIdRef.current),
+        colorBySpeedRef.current,
+      )
       frameOnce()
     })
     map.once('idle', frameOnce)
@@ -184,20 +204,6 @@ export function RideMap({
     [stopSpin],
   )
 
-  const locate = useCallback(() => {
-    const map = mapRef.current
-    if (!map || !navigator.geolocation) return
-    stopSpin()
-    navigator.geolocation.getCurrentPosition((position) => {
-      if (mapRef.current !== map) return
-      map.flyTo({
-        center: [position.coords.longitude, position.coords.latitude],
-        zoom: Math.max(map.getZoom(), 11),
-        duration: 800,
-      })
-    })
-  }, [stopSpin])
-
   const resetNorth = useCallback(() => {
     const map = mapRef.current
     if (!map) return
@@ -214,10 +220,9 @@ export function RideMap({
       bearing,
       zoomIn: () => zoomBy(1),
       zoomOut: () => zoomBy(-1),
-      locate,
       resetNorth,
     })
-  }, [bearing, locate, onCameraReady, resetNorth, token, zoomBy])
+  }, [bearing, onCameraReady, resetNorth, token, zoomBy])
 
   useEffect(() => () => onCameraReady?.(null), [onCameraReady])
 
@@ -245,16 +250,31 @@ export function RideMap({
   useEffect(() => {
     const map = mapRef.current
     if (!map || !appearance) return
-    const style = mapboxStyles[appearance]
-    if (styleRef.current === style) {
-      if (map.getLayer('rides')) {
-        map.setPaintProperty('rides', 'line-color', accentColor(appearance))
-      }
-      return
+    const key = styleId === 'privacy' ? `privacy:${appearance}` : styleId
+    if (styleRef.current === key) return
+    styleRef.current = key
+    map.setStyle(
+      rideMapStyle(styleId, appearance) as string | mapboxgl.StyleSpecification,
+    )
+  }, [appearance, styleId])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return
+    drawSpeedLines(map, speedLines, styleUsesSlot(styleId), colorBySpeed)
+    if (map.getLayer('rides')) {
+      map.setPaintProperty(
+        'rides',
+        'line-opacity',
+        colorBySpeed && speedLines.length > 0 ? 0 : 0.9,
+      )
+      map.setPaintProperty(
+        'rides',
+        'line-color',
+        accentColor(appearance ?? 'dark'),
+      )
     }
-    styleRef.current = style
-    map.setStyle(style)
-  }, [appearance])
+  }, [appearance, colorBySpeed, mapReady, speedLines, styleId])
 
   return (
     <div className='ride-map relative h-svh w-full bg-transparent'>
@@ -305,36 +325,126 @@ function frameWholeEarth(map: mapboxgl.Map, bounds: RideMapData['bounds']) {
   return true
 }
 
+function hoverRide(
+  map: mapboxgl.Map,
+  id: string | number | null,
+  hover: boolean,
+) {
+  if (id == null) return
+  if (map.getSource('rides')) {
+    map.setFeatureState({ source: 'rides', id }, { hover })
+  }
+  const layerId = `ride-speed-${id}`
+  if (!map.getLayer(layerId)) return
+  map.setPaintProperty(
+    layerId,
+    'line-width',
+    hover ? RIDE_LINE_HOVER : RIDE_LINE,
+  )
+  if (hover) map.moveLayer(layerId)
+}
+
+function styleUsesSlot(id: RideMapStyleId) {
+  return id === 'standard' || id === 'standardSatellite'
+}
+
+function styleReady(map: mapboxgl.Map) {
+  try {
+    return Boolean(map.getStyle())
+  } catch {
+    return false
+  }
+}
+
 function drawRides(map: mapboxgl.Map, mapData: RideMapData, color: string) {
   const existing = map.getSource('rides')
   if (existing?.type === 'geojson') {
     existing.setData(mapData.geojson)
     map.setPaintProperty('rides', 'line-color', color)
-  } else {
-    map.addSource('rides', { type: 'geojson', data: mapData.geojson })
-    map.addLayer({
-      id: 'rides-hit',
-      type: 'line',
-      source: 'rides',
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': color, 'line-width': 14, 'line-opacity': 0 },
-    })
-    map.addLayer({
-      id: 'rides',
-      type: 'line',
-      source: 'rides',
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: {
-        'line-color': color,
-        'line-width': [
-          'case',
-          ['boolean', ['feature-state', 'hover'], false],
-          5,
-          2,
-        ],
-        'line-width-transition': { duration: 150 },
-        'line-opacity': 0.9,
-      },
-    })
+    return
+  }
+  map.addSource('rides', { type: 'geojson', data: mapData.geojson })
+  map.addLayer({
+    id: 'rides-hit',
+    type: 'line',
+    source: 'rides',
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: { 'line-color': color, 'line-width': 14, 'line-opacity': 0 },
+  })
+  map.addLayer({
+    id: 'rides',
+    type: 'line',
+    source: 'rides',
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': color,
+      'line-width': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        RIDE_LINE_HOVER,
+        RIDE_LINE,
+      ],
+      'line-width-transition': { duration: 150 },
+      'line-opacity': 0.9,
+    },
+  })
+}
+
+function drawSpeedLines(
+  map: mapboxgl.Map,
+  lines: RideSpeedLine[],
+  slotted: boolean,
+  visible: boolean,
+) {
+  if (!styleReady(map)) return
+  const keep = new Set(lines.map((line) => line.id))
+  for (const layer of map.getStyle()?.layers ?? []) {
+    if (!layer.id.startsWith('ride-speed-')) continue
+    const id = Number(layer.id.slice('ride-speed-'.length))
+    if (keep.has(id)) continue
+    map.removeLayer(layer.id)
+    const source = `ride-speed-${id}`
+    if (map.getSource(source)) map.removeSource(source)
+  }
+  const slot = slotted ? ('top' as const) : undefined
+  for (const line of lines) {
+    const sourceId = `ride-speed-${line.id}`
+    const layerId = `ride-speed-${line.id}`
+    const data: GeoJSON.Feature<GeoJSON.LineString> = {
+      type: 'Feature',
+      properties: { id: line.id },
+      geometry: { type: 'LineString', coordinates: line.coordinates },
+    }
+    const source = map.getSource(sourceId)
+    if (source && source.type === 'geojson') source.setData(data)
+    else map.addSource(sourceId, { type: 'geojson', data, lineMetrics: true })
+    const gradient: mapboxgl.ExpressionSpecification = [
+      'interpolate',
+      ['linear'],
+      ['line-progress'],
+      ...line.stops,
+    ]
+    if (!map.getLayer(layerId)) {
+      map.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        ...(slot ? { slot } : {}),
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-width': RIDE_LINE,
+          'line-width-transition': { duration: 150 },
+          'line-opacity': 0.9,
+          'line-gradient': gradient,
+        },
+      })
+    } else {
+      map.setPaintProperty(layerId, 'line-gradient', gradient)
+    }
+    map.setLayoutProperty(
+      layerId,
+      'visibility',
+      visible && line.stops.length >= 4 ? 'visible' : 'none',
+    )
   }
 }

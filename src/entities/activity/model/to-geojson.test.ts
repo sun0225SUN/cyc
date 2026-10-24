@@ -34,6 +34,7 @@ test('decodes polylines into mapbox lines and bounds', () => {
 
   expect(geojson.features).toHaveLength(1)
   expect(geojson.features[0]?.properties.id).toBe(7)
+  expect(geojson.features[0]?.properties.speed).toBeCloseTo(18)
   expect(geojson.features[0]?.geometry.coordinates[0]).toEqual([113.4, 22.5])
   expect(bounds?.[0][0]).toBeCloseTo(113.4)
   expect(bounds?.[1][1]).toBeCloseTo(22.6)

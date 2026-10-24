@@ -148,6 +148,10 @@ function samePoint(
   )
 }
 
+export function routeDistances(coordinates: [number, number][]) {
+  return cumulativeMeters(coordinates)
+}
+
 function cumulativeMeters(coordinates: [number, number][]) {
   const lengths = [0]
   for (let index = 1; index < coordinates.length; index += 1) {

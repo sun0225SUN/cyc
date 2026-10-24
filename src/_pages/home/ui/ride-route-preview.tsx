@@ -5,15 +5,28 @@ import mapboxgl from 'mapbox-gl'
 import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Activity, LngLatBounds, RideLap } from '@/entities/activity'
+import type {
+  Activity,
+  LngLatBounds,
+  RideLap,
+  RideStreams,
+} from '@/entities/activity'
 import { type RideMapStyleId, rideMapStyle } from '@/shared/config/mapbox'
 import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
 import {
   coordinatesBounds,
   type LapPath,
   routeCoordinates,
+  routeDistances,
   splitLapPaths,
 } from '../model/lap-route'
+import {
+  hasSpeedValues,
+  lapOrigins,
+  SPEED_GRADIENT,
+  SPEED_MAX_KMH,
+  speedLineStops,
+} from '../model/speed-route'
 import { RideMapLayers } from './ride-map-layers'
 import './ride-route-preview.css'
 
@@ -24,6 +37,12 @@ const MAP_CONTROL_CHIP = `${MAP_CONTROL} rounded-2xl bg-white/85 shadow-lg backd
 const SOURCE_ID = 'detail-laps'
 const LAYER_ID = 'detail-laps'
 const CASING_ID = 'detail-laps-casing'
+const HIT_ID = 'detail-laps-hit'
+const SPEED_SOURCE = 'detail-speed'
+const SPEED_LAYER = 'detail-speed'
+const SPEED_FOCUS_SOURCE = 'detail-speed-focus'
+const SPEED_FOCUS_LAYER = 'detail-speed-focus'
+const HIT_PAD = 10
 
 function styleUsesSlot(id: RideMapStyleId) {
   return id === 'standard' || id === 'standardSatellite'
@@ -48,6 +67,7 @@ function fitMap(
 type RideRoutePreviewProps = {
   activity: Activity
   laps?: RideLap[]
+  streams?: RideStreams
   selectedLap?: number | null
   token: string
   onSelectLap?: (index: number | null) => void
@@ -71,6 +91,30 @@ function lapCollection(
   }
 }
 
+function lineCollection(
+  coordinates: [number, number][],
+): GeoJSON.FeatureCollection<GeoJSON.LineString> {
+  return {
+    type: 'FeatureCollection',
+    features:
+      coordinates.length < 2
+        ? []
+        : [
+            {
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates },
+            },
+          ],
+  }
+}
+
+function speedGradient(
+  stops: Array<number | string>,
+): mapboxgl.ExpressionSpecification {
+  return ['interpolate', ['linear'], ['line-progress'], ...stops]
+}
+
 function selectedExpr(
   selected: number | null,
   on: number,
@@ -88,15 +132,69 @@ function styleReady(map: mapboxgl.Map) {
   }
 }
 
-function syncLapSource(map: mapboxgl.Map, paths: LapPath[]) {
-  if (!styleReady(map) || paths.length === 0) return
-  const data = lapCollection(paths)
+function syncLapSource(
+  map: mapboxgl.Map,
+  data: GeoJSON.FeatureCollection<GeoJSON.LineString>,
+) {
+  if (!styleReady(map) || data.features.length === 0) return
   const source = map.getSource(SOURCE_ID)
   if (source && source.type === 'geojson') {
     source.setData(data)
     return
   }
-  map.addSource(SOURCE_ID, { type: 'geojson', data, promoteId: 'index' })
+  map.addSource(SOURCE_ID, { type: 'geojson', data })
+}
+
+function syncSpeedSource(
+  map: mapboxgl.Map,
+  id: string,
+  coordinates: [number, number][],
+) {
+  if (!styleReady(map)) return
+  const data = lineCollection(coordinates)
+  const source = map.getSource(id)
+  if (source && source.type === 'geojson') {
+    source.setData(data)
+    return
+  }
+  if (data.features.length === 0) return
+  map.addSource(id, { type: 'geojson', data, lineMetrics: true })
+}
+
+function ensureSpeedLayer(
+  map: mapboxgl.Map,
+  id: string,
+  source: string,
+  slotted: boolean,
+  width: number,
+  opacity: number,
+  stops: Array<number | string>,
+) {
+  if (stops.length < 4 || !map.getSource(source)) return
+  const slot = slotted ? ('top' as const) : undefined
+  if (!map.getLayer(id)) {
+    map.addLayer({
+      id,
+      type: 'line',
+      source,
+      ...(slot ? { slot } : {}),
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-width': width,
+        'line-opacity': opacity,
+        'line-gradient': speedGradient(stops),
+      },
+    })
+    return
+  }
+  map.setPaintProperty(id, 'line-gradient', speedGradient(stops))
+  map.setPaintProperty(id, 'line-width', width)
+  map.setPaintProperty(id, 'line-opacity', opacity)
+  map.setLayoutProperty(id, 'visibility', 'visible')
+}
+
+function hideLayer(map: mapboxgl.Map, id: string) {
+  if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none')
 }
 
 function styleLaps(
@@ -104,6 +202,10 @@ function styleLaps(
   selected: number | null,
   color: string,
   slotted: boolean,
+  colorBySpeed: boolean,
+  speedStops: Array<number | string>,
+  focusLine: [number, number][],
+  focusStops: Array<number | string>,
 ) {
   if (!styleReady(map) || !map.getSource(SOURCE_ID)) return
   const slot = slotted ? ('top' as const) : undefined
@@ -112,6 +214,17 @@ function styleLaps(
     source: SOURCE_ID,
     ...(slot ? { slot } : {}),
     layout: { 'line-join': 'round' as const, 'line-cap': 'round' as const },
+  }
+  if (!map.getLayer(HIT_ID)) {
+    map.addLayer({
+      ...line,
+      id: HIT_ID,
+      paint: {
+        'line-color': color,
+        'line-width': 18,
+        'line-opacity': 0,
+      },
+    })
   }
   if (!map.getLayer(CASING_ID)) {
     map.addLayer({
@@ -150,27 +263,123 @@ function styleLaps(
   map.setPaintProperty(
     LAYER_ID,
     'line-opacity',
-    selectedExpr(selected, 1, selected == null ? 0.95 : 0.18),
+    colorBySpeed
+      ? 0
+      : selectedExpr(selected, 1, selected == null ? 0.95 : 0.18),
   )
   map.setLayoutProperty(LAYER_ID, 'line-sort-key', selectedExpr(selected, 2, 0))
   map.setPaintProperty(CASING_ID, 'line-color', color)
+  if (colorBySpeed && speedStops.length >= 4) {
+    ensureSpeedLayer(
+      map,
+      SPEED_LAYER,
+      SPEED_SOURCE,
+      slotted,
+      selected == null ? 4 : 2.5,
+      selected == null ? 0.95 : 0.22,
+      speedStops,
+    )
+    if (selected != null && focusLine.length >= 2 && focusStops.length >= 4) {
+      syncSpeedSource(map, SPEED_FOCUS_SOURCE, focusLine)
+      ensureSpeedLayer(
+        map,
+        SPEED_FOCUS_LAYER,
+        SPEED_FOCUS_SOURCE,
+        slotted,
+        6.5,
+        1,
+        focusStops,
+      )
+      map.moveLayer(SPEED_FOCUS_LAYER)
+    } else {
+      hideLayer(map, SPEED_FOCUS_LAYER)
+    }
+    map.moveLayer(SPEED_LAYER)
+    if (map.getLayer(SPEED_FOCUS_LAYER)) map.moveLayer(SPEED_FOCUS_LAYER)
+  } else {
+    hideLayer(map, SPEED_LAYER)
+    hideLayer(map, SPEED_FOCUS_LAYER)
+  }
   map.moveLayer(LAYER_ID)
+}
+
+function lapIndexAt(map: mapboxgl.Map, point: mapboxgl.Point) {
+  if (!styleReady(map)) return null
+  const layers = [HIT_ID, LAYER_ID, CASING_ID].filter((id) => map.getLayer(id))
+  if (layers.length === 0) return null
+  const features = map.queryRenderedFeatures(
+    [
+      [point.x - HIT_PAD, point.y - HIT_PAD],
+      [point.x + HIT_PAD, point.y + HIT_PAD],
+    ],
+    { layers },
+  )
+  const raw = features[0]?.properties?.index
+  const index = typeof raw === 'number' ? raw : Number(raw)
+  return Number.isInteger(index) && index > 0 ? index : null
+}
+
+function bindLapLineSelect(
+  map: mapboxgl.Map,
+  selectedLapRef: { current: number | null },
+  onSelectLapRef: { current: RideRoutePreviewProps['onSelectLap'] },
+) {
+  const onClick = (event: mapboxgl.MapMouseEvent) => {
+    const target = event.originalEvent.target
+    if (
+      target instanceof Element &&
+      target.closest('[data-ride-map-controls], .ride-marker')
+    ) {
+      return
+    }
+    const index = lapIndexAt(map, event.point)
+    if (index == null) return
+    const selected = selectedLapRef.current
+    onSelectLapRef.current?.(index === selected ? null : index)
+  }
+  const onMove = (event: mapboxgl.MapMouseEvent) => {
+    map.getCanvas().style.cursor =
+      lapIndexAt(map, event.point) == null ? '' : 'pointer'
+  }
+  map.on('click', onClick)
+  map.on('mousemove', onMove)
+  return () => {
+    map.off('click', onClick)
+    map.off('mousemove', onMove)
+    map.getCanvas().style.cursor = ''
+  }
 }
 
 function paintLaps(
   map: mapboxgl.Map,
-  paths: LapPath[],
+  data: GeoJSON.FeatureCollection<GeoJSON.LineString>,
   selected: number | null,
   color: string,
   slotted: boolean,
+  colorBySpeed: boolean,
+  route: [number, number][],
+  speedStops: Array<number | string>,
+  focusLine: [number, number][],
+  focusStops: Array<number | string>,
 ) {
-  syncLapSource(map, paths)
-  styleLaps(map, selected, color, slotted)
+  syncLapSource(map, data)
+  if (colorBySpeed) syncSpeedSource(map, SPEED_SOURCE, route)
+  styleLaps(
+    map,
+    selected,
+    color,
+    slotted,
+    colorBySpeed,
+    speedStops,
+    focusLine,
+    focusStops,
+  )
 }
 
 export function RideRoutePreview({
   activity,
   laps = [],
+  streams,
   selectedLap = null,
   token,
   onSelectLap,
@@ -189,16 +398,43 @@ export function RideRoutePreview({
   )
   const [showLaps, setShowLaps] = useState(true)
   const [showEnds, setShowEnds] = useState(true)
+  const [colorBySpeed, setColorBySpeed] = useState(true)
   const [layersOpen, setLayersOpen] = useState(false)
   const route = useMemo(
     () => routeCoordinates(activity.summary_polyline),
     [activity.summary_polyline],
   )
   const paths = useMemo(() => splitLapPaths(route, laps), [laps, route])
+  const canColorBySpeed = hasSpeedValues(streams?.speed)
+  const track = useMemo(() => lapCollection(paths), [paths])
+  const speedStops = useMemo(
+    () =>
+      canColorBySpeed
+        ? speedLineStops(route, streams?.distance, streams?.speed)
+        : [],
+    [canColorBySpeed, route, streams?.distance, streams?.speed],
+  )
   const selectedPath = useMemo(() => {
     if (selectedLap == null) return null
     return paths.find((path) => path.index === selectedLap)?.coordinates ?? null
   }, [paths, selectedLap])
+  const focusStops = useMemo(() => {
+    if (!canColorBySpeed || !selectedPath || selectedLap == null) return []
+    const total = routeDistances(route).at(-1) ?? 0
+    const origin = lapOrigins(laps, total).get(selectedLap) ?? 0
+    return speedLineStops(selectedPath, streams?.distance, streams?.speed, {
+      origin,
+      routeTotal: total,
+    })
+  }, [
+    canColorBySpeed,
+    laps,
+    route,
+    selectedLap,
+    selectedPath,
+    streams?.distance,
+    streams?.speed,
+  ])
   const focus = useMemo(
     () =>
       selectedPath && selectedPath.length >= 2
@@ -208,12 +444,27 @@ export function RideRoutePreview({
   )
   const slot = styleUsesSlot(styleId)
   const mapDataRef = useRef({
-    paths,
+    track,
+    colorBySpeed,
     focus,
     selectedLap,
     slot,
+    route,
+    speedStops,
+    selectedPath,
+    focusStops,
   })
-  mapDataRef.current = { paths, focus, selectedLap, slot }
+  mapDataRef.current = {
+    track,
+    colorBySpeed,
+    focus,
+    selectedLap,
+    slot,
+    route,
+    speedStops,
+    selectedPath,
+    focusStops,
+  }
   const labels = useMemo(
     () => ({
       start: tDetail('start'),
@@ -224,6 +475,8 @@ export function RideRoutePreview({
   )
   const selectedLapRef = useRef(selectedLap)
   selectedLapRef.current = selectedLap
+  const onSelectLapRef = useRef(onSelectLap)
+  onSelectLapRef.current = onSelectLap
   const markerStateRef = useRef({
     laps,
     labels,
@@ -275,10 +528,15 @@ export function RideRoutePreview({
       const next = mapDataRef.current
       paintLaps(
         map,
-        next.paths,
+        next.track,
         next.selectedLap,
         accentColor(darkRef.current ? 'dark' : 'light'),
         next.slot,
+        next.colorBySpeed,
+        next.route,
+        next.speedStops,
+        next.selectedPath ?? [],
+        next.focusStops,
       )
       paintMarkers(map, markersRef, markerStateRef.current)
       fitMap(map, next.focus, 0)
@@ -287,6 +545,7 @@ export function RideRoutePreview({
     map.on('style.load', draw)
     map.on('load', draw)
     if (styleReady(map)) draw()
+    const unbindLaps = bindLapLineSelect(map, selectedLapRef, onSelectLapRef)
     let width = 0
     let height = 0
     const resize = new ResizeObserver(() => {
@@ -302,6 +561,7 @@ export function RideRoutePreview({
     resize.observe(container)
 
     return () => {
+      unbindLaps()
       resize.disconnect()
       clearMarkers(markersRef.current)
       markersRef.current = []
@@ -326,14 +586,32 @@ export function RideRoutePreview({
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    syncLapSource(map, paths)
-  }, [paths])
+    syncLapSource(map, track)
+    if (colorBySpeed) syncSpeedSource(map, SPEED_SOURCE, route)
+  }, [colorBySpeed, route, track])
 
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    styleLaps(map, selectedLap, accentColor(appearance), slot)
-  }, [appearance, selectedLap, slot])
+    styleLaps(
+      map,
+      selectedLap,
+      accentColor(appearance),
+      slot,
+      colorBySpeed,
+      speedStops,
+      selectedPath ?? [],
+      focusStops,
+    )
+  }, [
+    appearance,
+    colorBySpeed,
+    focusStops,
+    selectedLap,
+    selectedPath,
+    slot,
+    speedStops,
+  ])
 
   useEffect(() => {
     const map = mapRef.current
@@ -444,6 +722,9 @@ export function RideRoutePreview({
           )}
         </button>
       </div>
+      {colorBySpeed && speedStops.length > 0 ? (
+        <SpeedLegend slow={t('slow')} fast={t('fast')} />
+      ) : null}
       <RideMapLayers
         token={token}
         center={center}
@@ -453,9 +734,34 @@ export function RideRoutePreview({
         onShowLaps={setShowLaps}
         showEnds={showEnds}
         onShowEnds={setShowEnds}
+        colorBySpeed={canColorBySpeed ? colorBySpeed : undefined}
+        onColorBySpeed={canColorBySpeed ? setColorBySpeed : undefined}
         open={layersOpen}
         onOpenChange={setLayersOpen}
       />
+    </div>
+  )
+}
+
+function SpeedLegend({ slow, fast }: { slow: string; fast: string }) {
+  return (
+    <div
+      className='pointer-events-none absolute bottom-5 left-5 z-10 w-64'
+      role='img'
+      aria-label={`${slow} 0 km/h – ${fast} ${SPEED_MAX_KMH} km/h`}
+    >
+      <div className='speed-legend'>
+        <span className='speed-legend-cap is-slow' />
+        <span className='speed-legend-label is-slow'>{slow}</span>
+        <span
+          className='speed-legend-bar'
+          style={{
+            backgroundImage: `linear-gradient(90deg, ${SPEED_GRADIENT})`,
+          }}
+        />
+        <span className='speed-legend-label is-fast'>{fast}</span>
+        <span className='speed-legend-cap is-fast' />
+      </div>
     </div>
   )
 }

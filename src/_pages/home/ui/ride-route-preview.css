@@ -84,6 +84,48 @@
   background: color-mix(in oklab, var(--foreground) 18%, transparent);
 }
 
+.speed-legend {
+  display: flex;
+  align-items: center;
+}
+
+.speed-legend-cap {
+  display: block;
+  width: 14px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.speed-legend-cap.is-slow {
+  background: #14d45a;
+}
+
+.speed-legend-cap.is-fast {
+  background: #e02424;
+}
+
+.speed-legend-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.speed-legend-label {
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.speed-legend-label.is-slow {
+  color: #14d45a;
+}
+
+.speed-legend-label.is-fast {
+  color: #e02424;
+}
+
 .ride-route-preview .mapboxgl-ctrl-logo,
 .ride-route-preview .mapboxgl-ctrl-attrib,
 .ride-route-preview .mapboxgl-ctrl-attrib-button,

@@ -3,7 +3,6 @@
 import {
   CirclePause,
   CirclePlay,
-  LocateFixed,
   Map as MapIcon,
   Rotate3d,
   ZoomIn,
@@ -104,7 +103,6 @@ type MapCameraBarProps = {
   bearing: number
   onZoomIn: () => void
   onZoomOut: () => void
-  onLocate: () => void
   onResetNorth: () => void
 }
 
@@ -112,7 +110,6 @@ export function MapCameraBar({
   bearing,
   onZoomIn,
   onZoomOut,
-  onLocate,
   onResetNorth,
 }: MapCameraBarProps) {
   const t = useTranslations('map')
@@ -120,15 +117,6 @@ export function MapCameraBar({
   return (
     <div className='pointer-events-auto'>
       <div className={`${pill} flex-col px-3 py-4`}>
-        <button
-          type='button'
-          onClick={onLocate}
-          aria-label={t('locate')}
-          className={iconButton}
-          data-umami-event='map-locate'
-        >
-          <LocateFixed size={22} strokeWidth={2.25} nonScalingStroke />
-        </button>
         <button
           type='button'
           onClick={onZoomIn}

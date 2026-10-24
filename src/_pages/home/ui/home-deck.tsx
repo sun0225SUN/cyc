@@ -1,15 +1,30 @@
 'use client'
 
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { Layers } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import type { Activity } from '@/entities/activity'
-import { mapboxToken } from '@/shared/config/mapbox'
+import { loadRideSpeedProfiles } from '@/entities/activity/api/load-ride-speeds'
+import { mapboxToken, type RideMapStyleId } from '@/shared/config/mapbox'
+import { appearanceFromDocument } from '@/shared/config/theme'
 import {
   MapCameraBar,
   RideMap,
   type RideMapCamera,
+  type RideSpeedLine,
   Starfield,
 } from '@/widgets/ride-map'
+import { routeCoordinates } from '../model/lap-route'
+import { speedLineStops } from '../model/speed-route'
 import { useHomeQuery } from '../model/use-home-query'
+import { MapSpeedLayersDialog } from './map-speed-layers-dialog'
 import { PageSwitch } from './page-switch'
 import { RideDetail } from './ride-detail'
 import { RideExplorer } from './ride-explorer'
@@ -24,6 +39,39 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
   const [camera, setCamera] = useState<RideMapCamera | null>(null)
+  const [colorBySpeed, setColorBySpeed] = useState(true)
+  const [layersOpen, setLayersOpen] = useState(false)
+  const [styleId, setStyleId] = useState<RideMapStyleId>(() =>
+    appearanceFromDocument() === 'dark' ? 'dark' : 'light',
+  )
+  const [speedProfiles, setSpeedProfiles] = useState<Awaited<
+    ReturnType<typeof loadRideSpeedProfiles>
+  > | null>(null)
+  const tMap = useTranslations('map')
+  const token = mapboxToken()
+  const mapCenter = useMemo<[number, number]>(() => {
+    for (const activity of activities) {
+      const point = routeCoordinates(activity.summary_polyline)[0]
+      if (point) return point
+    }
+    return [120.15, 30.28]
+  }, [activities])
+  const speedLines = useMemo<RideSpeedLine[]>(() => {
+    if (!colorBySpeed || !speedProfiles) return []
+    return activities.flatMap((activity) => {
+      const profile = speedProfiles[activity.run_id]
+      if (!profile) return []
+      const coordinates = routeCoordinates(activity.summary_polyline)
+      const stops = speedLineStops(coordinates, profile.distance, profile.speed)
+      if (coordinates.length < 2 || stops.length < 4) return []
+      return [{ id: activity.run_id, coordinates, stops }]
+    })
+  }, [activities, colorBySpeed, speedProfiles])
+
+  useEffect(() => {
+    if (!colorBySpeed || speedProfiles) return
+    void loadRideSpeedProfiles().then(setSpeedProfiles)
+  }, [colorBySpeed, speedProfiles])
   const { query, setQuery } = useHomeQuery()
   const [detail, setDetail] = useState<{
     activity: Activity
@@ -138,10 +186,13 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
             <RideMap
               activities={activities}
               locale={locale}
-              token={mapboxToken()}
+              token={token}
               brand={brand}
               onSelect={openDetail}
               onCameraReady={setCamera}
+              colorBySpeed={colorBySpeed}
+              styleId={styleId}
+              speedLines={speedLines}
             />
           </section>
           <section
@@ -166,24 +217,46 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
             />
           </div>
           {page === 0 && camera ? (
-            <div className='absolute right-0 bottom-0'>
+            <div className='absolute right-0 bottom-0 flex flex-col items-end gap-3'>
+              <div className='pointer-events-auto'>
+                <button
+                  type='button'
+                  onClick={() => setLayersOpen(true)}
+                  aria-label={tMap('layers')}
+                  aria-expanded={layersOpen}
+                  data-umami-event='map-layers'
+                  className='grid size-11 cursor-pointer place-items-center rounded-full bg-white/20 shadow-lg backdrop-blur-md dark:bg-black/20'
+                >
+                  <Layers size={22} strokeWidth={2.25} />
+                </button>
+              </div>
               <MapCameraBar
                 bearing={camera.bearing}
                 onZoomIn={camera.zoomIn}
                 onZoomOut={camera.zoomOut}
-                onLocate={camera.locate}
                 onResetNorth={camera.resetNorth}
               />
             </div>
           ) : null}
         </div>
+        {layersOpen ? (
+          <MapSpeedLayersDialog
+            token={token}
+            center={mapCenter}
+            styleId={styleId}
+            onStyleId={setStyleId}
+            colorBySpeed={colorBySpeed}
+            onColorBySpeed={setColorBySpeed}
+            onClose={() => setLayersOpen(false)}
+          />
+        ) : null}
       </div>
       {detail && (
         <RideDetail
           activity={detail.activity}
           occurrences={detail.occurrences}
           locale={locale}
-          token={mapboxToken()}
+          token={token}
           onSelectOccurrence={(activity) => {
             setQuery({ ride: activity.run_id })
             setDetail({ activity, occurrences: detail.occurrences })

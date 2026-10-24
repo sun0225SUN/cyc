@@ -1,7 +1,8 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-import { type ReactNode, useMemo } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { type ReactNode, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Activity } from '@/entities/activity'
 import {
   activityYears,
@@ -28,6 +29,12 @@ const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 
 export type HeatmapYear = number | 'all'
 
+type HeatmapHover = {
+  label: string
+  x: number
+  y: number
+}
+
 type RideHeatmapProps = {
   activities: Activity[]
   selectedYear: HeatmapYear
@@ -41,13 +48,26 @@ function YearGrid({
   showYear,
   selectedDate,
   onDateChange,
+  onHover,
 }: {
   data: YearHeatmap
   showYear: boolean
   selectedDate: string | null
   onDateChange: (date: string | null) => void
+  onHover: (hover: HeatmapHover | null) => void
 }) {
   const t = useTranslations('heatmap')
+  const locale = useLocale()
+  const dates = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      }),
+    [locale],
+  )
   const monthStarts = useMemo(() => {
     const starts = new Map<number, number>()
     data.weeks.forEach((week, index) => {
@@ -87,10 +107,13 @@ function YearGrid({
             {data.weeks.map((week) => (
               <div key={week[0]?.date} className='grid grid-rows-7 gap-1'>
                 {week.map((day) => {
+                  const distance = (day.distance / 1000).toFixed(1)
+                  const date = dates.format(new Date(`${day.date}T00:00:00Z`))
+                  const hoverLabel = t('dayHover', { date, distance })
                   const detail = t('dayDetail', {
-                    date: day.date,
+                    date,
                     count: day.count,
-                    distance: (day.distance / 1000).toFixed(1),
+                    distance,
                   })
                   return (
                     <button
@@ -101,6 +124,16 @@ function YearGrid({
                       data-active={selectedDate === day.date}
                       aria-label={day.inYear ? detail : undefined}
                       aria-pressed={selectedDate === day.date}
+                      onMouseEnter={(event) => {
+                        if (day.count === 0) return
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        onHover({
+                          label: hoverLabel,
+                          x: rect.left + rect.width / 2,
+                          y: rect.top,
+                        })
+                      }}
+                      onMouseLeave={() => onHover(null)}
                       onClick={() =>
                         onDateChange(
                           selectedDate === day.date ? null : day.date,
@@ -127,6 +160,7 @@ export function RideHeatmap({
   onDateChange,
 }: RideHeatmapProps) {
   const t = useTranslations('heatmap')
+  const [hover, setHover] = useState<HeatmapHover | null>(null)
   const years = useMemo(() => activityYears(activities), [activities])
   const visibleYears = selectedYear === 'all' ? years : [selectedYear]
   const data = useMemo(
@@ -170,6 +204,7 @@ export function RideHeatmap({
               showYear={selectedYear === 'all'}
               selectedDate={selectedDate}
               onDateChange={onDateChange}
+              onHover={setHover}
             />
           ))}
           <div className='text-muted-foreground flex items-center justify-end gap-2 text-xs'>
@@ -185,6 +220,18 @@ export function RideHeatmap({
           </div>
         </div>
       </div>
+      {hover
+        ? createPortal(
+            <div
+              role='tooltip'
+              className='pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-lg border bg-background px-2 py-1 text-xs shadow-xl'
+              style={{ left: hover.x, top: hover.y - 8 }}
+            >
+              {hover.label}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

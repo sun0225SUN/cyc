@@ -1,28 +1,20 @@
-.year-tabs {
-  --year-tab-color: #2563eb;
-}
-
-.dark .year-tabs {
-  --year-tab-color: #fb923c;
-}
-
 .year-tab {
-  border-color: color-mix(in oklab, var(--year-tab-color) 22%, var(--border));
+  border-color: color-mix(in oklab, var(--color-ride) 22%, var(--border));
 }
 
 .year-tab:hover {
-  border-color: color-mix(in oklab, var(--year-tab-color) 65%, transparent);
-  background: color-mix(in oklab, var(--year-tab-color) 12%, transparent);
-  color: var(--year-tab-color);
+  border-color: color-mix(in oklab, var(--color-ride) 65%, transparent);
+  background: color-mix(in oklab, var(--color-ride) 12%, transparent);
+  color: var(--color-ride);
 }
 
 .year-tab[aria-pressed="true"] {
-  border-color: var(--year-tab-color);
-  background: var(--year-tab-color);
-  color: white;
+  border-color: var(--color-ride);
+  background: var(--color-ride);
+  color: var(--color-ride-on);
 }
 
 .year-tab[aria-pressed="true"]:hover {
-  background: color-mix(in oklab, var(--year-tab-color) 88%, black);
-  color: white;
+  background: color-mix(in oklab, var(--color-ride) 88%, black);
+  color: var(--color-ride-on);
 }

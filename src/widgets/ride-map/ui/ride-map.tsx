@@ -15,25 +15,16 @@ import {
   mapboxStyles,
   mapLanguage,
 } from '@/shared/config/mapbox'
+import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
 import { MapCameraBar, MapToolbar } from './map-toolbar'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import './mapbox.css'
-
-const lineColor: Record<MapAppearance, string> = {
-  light: '#2563eb',
-  dark: '#fb923c',
-}
 
 type RideMapProps = {
   activities: Activity[]
   locale: string
   token: string
   onSelect?: (activity: Activity) => void
-}
-
-function appearanceFromDocument(): MapAppearance {
-  if (document.documentElement.classList.contains('dark')) return 'dark'
-  return 'light'
 }
 
 export function RideMap({ activities, locale, token, onSelect }: RideMapProps) {
@@ -108,9 +99,9 @@ export function RideMap({ activities, locale, token, onSelect }: RideMapProps) {
       if (!framed) framed = frameWholeEarth(map, mapData.bounds)
     }
     map.on('style.load', () => {
-      const theme = styleRef.current === mapboxStyles.dark ? 'dark' : 'light'
+      const theme = appearanceFromDocument()
       paintSpace(map, theme)
-      drawRides(map, mapData, lineColor[theme])
+      drawRides(map, mapData, accentColor(theme))
       frameOnce()
     })
     map.once('idle', frameOnce)
@@ -197,7 +188,12 @@ export function RideMap({ activities, locale, token, onSelect }: RideMapProps) {
     const map = mapRef.current
     if (!map || !appearance) return
     const style = mapboxStyles[appearance]
-    if (styleRef.current === style) return
+    if (styleRef.current === style) {
+      if (map.getLayer('rides')) {
+        map.setPaintProperty('rides', 'line-color', accentColor(appearance))
+      }
+      return
+    }
     styleRef.current = style
     map.setStyle(style)
   }, [appearance])

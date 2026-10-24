@@ -8,6 +8,7 @@ import {
   RideHeatmap,
 } from '@/widgets/ride-heatmap'
 import { RideList } from '@/widgets/ride-list'
+import { RideSummary } from '@/widgets/ride-summary'
 import { RideTracks } from '@/widgets/ride-tracks'
 import { YearTabs } from './year-tabs'
 
@@ -34,6 +35,7 @@ export function RideExplorer({
   const [heatmapYear, setHeatmapYear] = useState<HeatmapYear>(latestYear)
   const [listYear, setListYear] = useState<HeatmapYear>(latestYear)
   const [tracksYear, setTracksYear] = useState<HeatmapYear>(latestYear)
+  const [summaryYear, setSummaryYear] = useState<HeatmapYear>('all')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const listActivities = useMemo(
@@ -100,6 +102,18 @@ export function RideExplorer({
           />
         }
         onSelect={onSelect}
+      />
+      <RideSummary
+        activities={activities}
+        locale={locale}
+        selectedYear={summaryYear}
+        yearTabs={
+          <YearTabs
+            years={years}
+            selectedYear={summaryYear}
+            onYearChange={setSummaryYear}
+          />
+        }
       />
     </div>
   )

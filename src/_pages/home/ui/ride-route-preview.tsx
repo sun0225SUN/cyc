@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { type Activity, activitiesToGeoJson } from '@/entities/activity'
 import { mapboxStyles } from '@/shared/config/mapbox'
+import { accentColor } from '@/shared/config/theme'
 import './ride-route-preview.css'
 
 const SOURCE_ID = 'detail-ride'
@@ -23,14 +24,18 @@ function motionDuration() {
 }
 
 function paintRoute(map: mapboxgl.Map, dark: boolean) {
-  if (map.getLayer(LAYER_ID)) return
+  const color = accentColor(dark ? 'dark' : 'light')
+  if (map.getLayer(LAYER_ID)) {
+    map.setPaintProperty(LAYER_ID, 'line-color', color)
+    return
+  }
   map.addLayer({
     id: LAYER_ID,
     type: 'line',
     source: SOURCE_ID,
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': dark ? '#fb923c' : '#2563eb',
+      'line-color': color,
       'line-width': 4,
       'line-opacity': 0.95,
     },

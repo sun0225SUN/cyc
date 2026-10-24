@@ -125,7 +125,7 @@ export function RideList({
                 data-active={
                   selectedDate === activity.start_date_local.slice(0, 10)
                 }
-                className='grid w-full cursor-pointer grid-cols-[1.4fr_1.15fr_0.85fr_0.95fr_0.85fr_0.85fr] border-b text-left transition-colors last:border-b-0 hover:bg-black/2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 data-[active=true]:bg-blue-500/8 data-[active=true]:text-blue-600 dark:hover:bg-white/3.5 dark:data-[active=true]:bg-orange-400/8 dark:data-[active=true]:text-orange-400'
+                className='grid w-full cursor-pointer grid-cols-[1.4fr_1.15fr_0.85fr_0.95fr_0.85fr_0.85fr] border-b text-left transition-colors last:border-b-0 hover:bg-black/2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 data-[active=true]:bg-ride/8 data-[active=true]:text-ride dark:hover:bg-white/3.5'
               >
                 <span className='py-4 pr-4 pl-5 font-medium'>
                   {formatActivityName(activity.name)}

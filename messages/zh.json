@@ -56,6 +56,7 @@
     "yearSelection": "选择年份",
     "all": "全部",
     "dayDetail": "{date}：{count} 次骑行，{distance} 公里",
+    "dayHover": "{date} · {distance} 公里",
     "less": "少",
     "more": "多",
     "jan": "1月",
@@ -87,5 +88,22 @@
     "elevation": "累计爬升",
     "eachTime": "每次",
     "eachTimeCount": "{count} 次"
+  },
+  "summary": {
+    "title": "Summary",
+    "subtitle": "{count} 次骑行 · {distance} 公里",
+    "period": "时间尺度",
+    "month": "月",
+    "week": "周",
+    "day": "日",
+    "year": "年",
+    "rides": "活动次数",
+    "distance": "总距离",
+    "movingTime": "运动时间",
+    "averageSpeed": "平均速度",
+    "maxSpeed": "最大速度",
+    "longest": "最长距离",
+    "averageDistance": "平均距离",
+    "elevation": "累计爬升"
   }
 }

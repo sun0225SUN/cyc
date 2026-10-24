@@ -1,0 +1,40 @@
+.ride-summary-tab {
+  border-color: color-mix(in oklab, var(--color-ride) 22%, var(--border));
+}
+
+.ride-summary-tab:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--color-ride) 65%, transparent);
+  background: color-mix(in oklab, var(--color-ride) 12%, transparent);
+  color: var(--color-ride);
+}
+
+.ride-summary-tab[aria-pressed="true"] {
+  border-color: var(--color-ride);
+  background: var(--color-ride);
+  color: var(--color-ride-on);
+}
+
+.ride-summary-tab[aria-pressed="true"]:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--color-ride) 88%, black);
+  color: var(--color-ride-on);
+}
+
+.ride-summary-chart,
+.ride-summary-chart *:focus,
+.ride-summary-chart *:focus-visible,
+.ride-summary-chart *:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.ride-summary-chart svg,
+.ride-summary-chart .recharts-wrapper,
+.ride-summary-chart .recharts-surface {
+  border: none;
+  outline: none;
+}
+
+.ride-summary-chart .recharts-tooltip-cursor,
+.ride-summary-chart .recharts-rectangle.recharts-tooltip-cursor {
+  display: none;
+}

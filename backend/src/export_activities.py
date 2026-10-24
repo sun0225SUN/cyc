@@ -18,9 +18,8 @@ class ExportError(Exception):
 def export_activities(db_path: Path, output_path: Path) -> int:
     """Write activities from SQLite to a JSON list, ordered by local start time.
 
-    The object keys follow running_page's ``activities.json``. ``streak`` is the
-    number of consecutive local days ending on that activity. Rows shorter than
-    0.1 meters are left out.
+    ``streak`` is the number of consecutive local days ending on that activity.
+    Rows shorter than 0.1 meters are left out.
     """
 
     if not db_path.is_file():

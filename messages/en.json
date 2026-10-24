@@ -56,6 +56,7 @@
     "yearSelection": "Select year",
     "all": "All",
     "dayDetail": "{date}: {count, plural, one {# ride} other {# rides}}, {distance} km",
+    "dayHover": "{date} · {distance} km",
     "less": "Less",
     "more": "More",
     "jan": "Jan",
@@ -87,5 +88,22 @@
     "elevation": "Elevation gain",
     "eachTime": "Each ride",
     "eachTimeCount": "{count, plural, one {# time} other {# times}}"
+  },
+  "summary": {
+    "title": "Summary",
+    "subtitle": "{count, plural, one {# ride} other {# rides}} · {distance} km",
+    "period": "Time scale",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "year": "Year",
+    "rides": "Rides",
+    "distance": "Distance",
+    "movingTime": "Moving time",
+    "averageSpeed": "Average speed",
+    "maxSpeed": "Max speed",
+    "longest": "Longest ride",
+    "averageDistance": "Average distance",
+    "elevation": "Elevation"
   }
 }

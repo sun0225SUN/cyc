@@ -41,7 +41,7 @@ class Activity:
 
 
 def parse_fit(path: Path) -> Activity:
-    """Read one FIT file into the activity fields stored by running_page."""
+    """Read one FIT file into an activity record."""
 
     if not path.is_file() or path.stat().st_size == 0:
         raise FitParseError(f"{path.name} is empty")

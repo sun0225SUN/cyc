@@ -5,9 +5,9 @@ import {
   CirclePlay,
   LocateFixed,
   Map as MapIcon,
-  Minus,
-  Plus,
   Rotate3d,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { LanguageToggle } from '@/features/language'
@@ -101,15 +101,19 @@ export function MapToolbar({
 }
 
 type MapCameraBarProps = {
+  bearing: number
   onZoomIn: () => void
   onZoomOut: () => void
   onLocate: () => void
+  onResetNorth: () => void
 }
 
 export function MapCameraBar({
+  bearing,
   onZoomIn,
   onZoomOut,
   onLocate,
+  onResetNorth,
 }: MapCameraBarProps) {
   const t = useTranslations('map')
 
@@ -132,7 +136,7 @@ export function MapCameraBar({
           className={iconButton}
           data-umami-event='map-zoom-in'
         >
-          <Plus size={22} strokeWidth={2.25} nonScalingStroke />
+          <ZoomIn size={22} strokeWidth={2.25} nonScalingStroke />
         </button>
         <button
           type='button'
@@ -141,7 +145,31 @@ export function MapCameraBar({
           className={iconButton}
           data-umami-event='map-zoom-out'
         >
-          <Minus size={22} strokeWidth={2.25} nonScalingStroke />
+          <ZoomOut size={22} strokeWidth={2.25} nonScalingStroke />
+        </button>
+        <button
+          type='button'
+          onClick={onResetNorth}
+          aria-label={t('resetNorth')}
+          className={iconButton}
+          data-umami-event='map-reset-north'
+          data-umami-event-bearing={String(Math.round(bearing))}
+        >
+          <svg
+            viewBox='0 0 24 24'
+            width='22'
+            height='22'
+            aria-hidden='true'
+            className='transition-transform duration-200'
+            style={{ transform: `rotate(${-bearing}deg)` }}
+          >
+            <path d='M12 2.75 17.25 10.75H6.75L12 2.75Z' fill='currentColor' />
+            <path
+              d='m12 21.25-5.25-8h10.5l-5.25 8Z'
+              fill='currentColor'
+              opacity='0.32'
+            />
+          </svg>
         </button>
       </div>
     </div>

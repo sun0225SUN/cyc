@@ -28,9 +28,11 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import './mapbox.css'
 
 export type RideMapCamera = {
+  bearing: number
   zoomIn: () => void
   zoomOut: () => void
   locate: () => void
+  resetNorth: () => void
 }
 
 type RideMapProps = {
@@ -60,6 +62,7 @@ export function RideMap({
   const [isGlobe, setIsGlobe] = useState(true)
   const [isRotating, setIsRotating] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [bearing, setBearing] = useState(0)
   const mapData = useMemo(() => activitiesToGeoJson(activities), [activities])
   const appearance =
     resolvedTheme === 'dark' || resolvedTheme === 'light' ? resolvedTheme : null
@@ -82,6 +85,7 @@ export function RideMap({
     })
     map.addControl(new MapboxLanguage({ defaultLanguage: mapLanguage(locale) }))
     map.on('dragstart', () => setIsRotating(false))
+    map.on('rotate', () => setBearing(map.getBearing()))
     let hoveredRideId: string | number | null = null
     map.on('mouseenter', 'rides-hit', () => {
       map.getCanvas().style.cursor = 'pointer'
@@ -194,18 +198,27 @@ export function RideMap({
     })
   }, [stopSpin])
 
+  const resetNorth = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+    stopSpin()
+    map.easeTo({ bearing: 0, pitch: 0, duration: 350 })
+  }, [stopSpin])
+
   useEffect(() => {
     if (!token) {
       onCameraReady?.(null)
       return
     }
     onCameraReady?.({
+      bearing,
       zoomIn: () => zoomBy(1),
       zoomOut: () => zoomBy(-1),
       locate,
+      resetNorth,
     })
     return () => onCameraReady?.(null)
-  }, [locate, onCameraReady, token, zoomBy])
+  }, [bearing, locate, onCameraReady, resetNorth, token, zoomBy])
 
   const toggleProjection = useCallback(() => {
     const map = mapRef.current

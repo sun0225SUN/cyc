@@ -4,6 +4,11 @@ export {
   activityNameKey,
   activityNameKeys,
 } from './model/activity-name'
+export type {
+  RideDetailData,
+  RideLap,
+  RideStreams,
+} from './model/ride-detail'
 export {
   activitiesToGeoJson,
   type LngLatBounds,

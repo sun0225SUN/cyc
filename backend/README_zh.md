@@ -6,7 +6,7 @@
 
 登录 `prod.zh.igpsport.com`，按页读取活动，再请求 `getDownloadUrl`。文件本体从签名 URL 下载，不带登录 Token。
 
-下载结果在 `backend/data/raw/<rideId>.fit`，入库结果在 `backend/data/activities.db`。这两处不进 Git。导出的 `activities.json` 在仓库根目录的 `data/activities.json`，会提交，供前端直接读取。已有 FIT 和已入库的编号都会跳过。某个文件失败时，其余文件继续，命令以退出码 1 结束。
+下载结果在 `backend/data/raw/<rideId>.fit`，入库结果在 `backend/data/activities.db`。这两处不进 Git。导出的 `activities.json` 在仓库根目录的 `data/activities.json`，每条骑行的曲线和圈点在 `data/rides/<id>.json`。这些文件会提交，供前端直接读取。已有 FIT 会跳过。已入库的活动也会跳过，除非缺 record 时间序列，这时会从 FIT 回填。某个文件失败时，其余文件继续，命令以退出码 1 结束。
 
 ## 环境
 

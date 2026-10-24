@@ -103,7 +103,8 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
         event.defaultPrevented ||
         event.metaKey ||
         event.ctrlKey ||
-        event.altKey
+        event.altKey ||
+        detail
       )
         return
       if (event.key === 'PageDown' && page < 1) {
@@ -118,56 +119,60 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [page, scrollToPage])
+  }, [detail, page, scrollToPage])
 
   return (
     <div className='relative h-svh overflow-hidden bg-[#f4f7fb] dark:bg-black'>
-      <div className='pointer-events-none fixed inset-0 hidden dark:block'>
-        <Starfield />
-      </div>
-      <div
-        ref={scrollerRef}
-        className='relative z-10 h-svh snap-y snap-mandatory scrollbar-none overflow-y-auto overscroll-y-none scroll-smooth [&::-webkit-scrollbar]:hidden'
-      >
-        <section
-          id='ride-map'
-          className='relative h-svh snap-start snap-always'
+      <div inert={detail ? true : undefined}>
+        <div className='pointer-events-none fixed inset-0 hidden dark:block'>
+          <Starfield />
+        </div>
+        <div
+          ref={scrollerRef}
+          className='relative z-10 h-svh snap-y snap-mandatory scrollbar-none overflow-y-auto overscroll-y-none scroll-smooth [&::-webkit-scrollbar]:hidden'
         >
-          <RideMap
-            activities={activities}
-            locale={locale}
-            token={mapboxToken()}
-            brand={brand}
-            onSelect={openDetail}
-            onCameraReady={setCamera}
+          <section
+            id='ride-map'
+            className='relative h-svh snap-start snap-always'
+          >
+            <RideMap
+              activities={activities}
+              locale={locale}
+              token={mapboxToken()}
+              brand={brand}
+              onSelect={openDetail}
+              onCameraReady={setCamera}
+            />
+          </section>
+          <section
+            data-data-page
+            className='h-svh snap-start snap-always overflow-y-auto overscroll-y-contain'
+          >
+            <RideExplorer
+              activities={activities}
+              locale={locale}
+              selectedRideId={query.ride}
+              onSelect={openDetail}
+            />
+          </section>
+        </div>
+        <div className='pointer-events-none fixed inset-x-4 bottom-4 z-30 flex items-center justify-between'>
+          <PageSwitch
+            page={page}
+            pageCount={2}
+            onPrevious={() => scrollToPage(Math.max(0, page - 1))}
+            onNext={() => scrollToPage(Math.min(1, page + 1))}
           />
-        </section>
-        <section
-          data-data-page
-          className='h-svh snap-start snap-always overflow-y-auto overscroll-y-contain'
-        >
-          <RideExplorer
-            activities={activities}
-            locale={locale}
-            selectedRideId={query.ride}
-            onSelect={openDetail}
-          />
-        </section>
-      </div>
-      <div className='pointer-events-none fixed inset-x-4 bottom-4 z-30 flex items-center justify-between'>
-        <PageSwitch
-          page={page}
-          pageCount={2}
-          onPrevious={() => scrollToPage(Math.max(0, page - 1))}
-          onNext={() => scrollToPage(Math.min(1, page + 1))}
-        />
-        {page === 0 && camera ? (
-          <MapCameraBar
-            onZoomIn={camera.zoomIn}
-            onZoomOut={camera.zoomOut}
-            onLocate={camera.locate}
-          />
-        ) : null}
+          {page === 0 && camera ? (
+            <MapCameraBar
+              bearing={camera.bearing}
+              onZoomIn={camera.zoomIn}
+              onZoomOut={camera.zoomOut}
+              onLocate={camera.locate}
+              onResetNorth={camera.resetNorth}
+            />
+          ) : null}
+        </div>
       </div>
       {detail && (
         <RideDetail

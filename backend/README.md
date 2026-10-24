@@ -6,7 +6,7 @@ Download original FIT files from iGPSPORT, parse them into SQLite, then export J
 
 It signs in at `prod.zh.igpsport.com`, lists activities page by page, then calls `getDownloadUrl`. The file body comes from the signed URL and does not carry the login token.
 
-Downloads land in `backend/data/raw/<rideId>.fit`. The database is `backend/data/activities.db`. Neither is committed. The exported list is `data/activities.json` at the repo root; that file is committed so the frontend can read it. Existing FIT files and imported ids are skipped. If one file fails, the rest continue and the command exits with code 1.
+Downloads land in `backend/data/raw/<rideId>.fit`. The database is `backend/data/activities.db`. Neither is committed. The exported list is `data/activities.json` at the repo root; per-ride streams and laps go in `data/rides/<id>.json`. Those files are committed so the frontend can read them. Existing FIT files are skipped. An activity already in SQLite is skipped unless its record stream is missing, in which case that stream is backfilled from the FIT file. If one file fails, the rest continue and the command exits with code 1.
 
 ## Setup
 

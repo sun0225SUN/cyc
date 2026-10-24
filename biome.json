@@ -13,7 +13,8 @@
       "!.next",
       "!dist",
       "!build",
-      "!data/activities.json"
+      "!data/activities.json",
+      "!data/rides"
     ]
   },
   "formatter": {

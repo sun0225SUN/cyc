@@ -1,0 +1,118 @@
+.ride-stream-zoom {
+  touch-action: none;
+  overscroll-behavior: contain;
+  cursor: grab;
+}
+
+.ride-stream-zoom.is-panning {
+  cursor: grabbing;
+}
+
+.ride-chart-scrubber-track {
+  height: 28px;
+}
+
+.ride-chart-scrubber-rail {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--foreground) 16%, transparent);
+  translate: 0 -50%;
+}
+
+.ride-chart-scrubber-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.ride-chart-scrubber-range {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  height: 16px;
+  min-width: 44px;
+  translate: 0 -50%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-ride) 10%, white);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--color-ride) 10%, transparent);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dark .ride-chart-scrubber-range {
+  background: color-mix(in oklab, white 10%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, white 8%, transparent),
+    0 0 0 1px color-mix(in oklab, white 12%, transparent);
+}
+
+.ride-chart-scrubber-range:hover {
+  background: color-mix(in oklab, var(--color-ride) 14%, white);
+}
+
+.dark .ride-chart-scrubber-range:hover {
+  background: color-mix(in oklab, white 13%, transparent);
+}
+
+.ride-chart-scrubber-range:active {
+  cursor: grabbing;
+}
+
+.ride-chart-scrubber-grip {
+  display: flex;
+  width: 10px;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ride-chart-scrubber-grip i {
+  display: block;
+  height: 1.5px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--foreground) 28%, transparent);
+}
+
+.ride-chart-scrubber-edge {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  width: 16px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+.ride-chart-scrubber-edge.is-start {
+  left: 0;
+}
+
+.ride-chart-scrubber-edge.is-end {
+  right: 0;
+}
+
+.ride-stream-popover {
+  min-width: 10.5rem;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--background);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 16%);
+}
+
+.ride-stream-chart,
+.ride-zone-chart {
+  min-height: 0;
+}
+
+.ride-stream-chart .recharts-cartesian-axis-tick-value,
+.ride-zone-chart .recharts-cartesian-axis-tick-value {
+  font-variant-numeric: tabular-nums;
+}

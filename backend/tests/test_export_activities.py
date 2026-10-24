@@ -126,6 +126,10 @@ def test_export_orders_by_local_time_and_counts_streak(tmp_path: Path) -> None:
     assert activities[1]["name"] == "earlyMorning"
     assert activities[2]["name"] == "morning"
     assert "elapsed_time" not in activities[0]
+    ride = json.loads((output.parent / "rides" / "1.json").read_text(encoding="utf-8"))
+    assert ride["run_id"] == 1
+    assert ride["streams"] == {}
+    assert ride["laps"] == []
 
 
 @pytest.mark.parametrize(

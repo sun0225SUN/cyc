@@ -1,9 +1,10 @@
 import argparse
+import json
 import logging
 import sqlite3
 import sys
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -18,6 +19,63 @@ _SEMICIRCLE_TO_DEGREES = 180.0 / 2**31
 
 class FitParseError(Exception):
     """A FIT file or the import settings cannot be used."""
+
+
+@dataclass(frozen=True)
+class Record:
+    elapsed: float
+    distance: float | None
+    speed: float | None
+    cadence: int | None
+    altitude: float | None
+    heart_rate: int | None
+    power: int | None
+    temperature: float | None = None
+
+
+@dataclass(frozen=True)
+class Lap:
+    index: int
+    elapsed: float
+    distance: float | None
+    lat: float | None
+    lng: float | None
+    timer_time: float | None = None
+    average_speed: float | None = None
+    max_speed: float | None = None
+    average_heartrate: float | None = None
+    max_heartrate: float | None = None
+    average_cadence: float | None = None
+    max_cadence: float | None = None
+    average_power: float | None = None
+    max_power: float | None = None
+    stats: dict[str, float | None] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class SessionStats:
+    calories: float | None = None
+    elevation_loss: float | None = None
+    max_speed: float | None = None
+    average_cadence: float | None = None
+    max_cadence: float | None = None
+    max_heartrate: float | None = None
+    average_power: float | None = None
+    max_power: float | None = None
+    average_altitude: float | None = None
+    max_altitude: float | None = None
+    min_altitude: float | None = None
+    average_temperature: float | None = None
+    max_temperature: float | None = None
+    timer_time: float | None = None
+    avg_pos_grade: float | None = None
+    max_pos_grade: float | None = None
+    avg_neg_grade: float | None = None
+    max_neg_grade: float | None = None
+    avg_pos_vertical_speed: float | None = None
+    max_pos_vertical_speed: float | None = None
+    avg_neg_vertical_speed: float | None = None
+    max_neg_vertical_speed: float | None = None
 
 
 @dataclass(frozen=True)
@@ -38,6 +96,9 @@ class Activity:
     start_lng: float | None
     summary_polyline: str
     source_file: str
+    records: tuple[Record, ...] = ()
+    laps: tuple[Lap, ...] = ()
+    session_stats: SessionStats = SessionStats()
 
 
 def parse_fit(path: Path) -> Activity:
@@ -56,7 +117,8 @@ def parse_fit(path: Path) -> Activity:
         raise FitParseError(f"{path.name} has no session distance")
     start = _as_utc(session.get("start_time"))
     local = _local_time(messages.get("activity_mesgs"), start)
-    points = _track(messages.get("record_mesgs") or [])
+    record_messages = messages.get("record_mesgs") or []
+    points = _track(record_messages)
     start_lat = _degrees(session.get("start_position_lat"))
     start_lng = _degrees(session.get("start_position_long"))
     if start_lat is None and points:
@@ -91,6 +153,9 @@ def parse_fit(path: Path) -> Activity:
         start_lng=start_lng,
         summary_polyline=polyline.encode(points) if points else "",
         source_file=path.name,
+        records=_records(record_messages, start),
+        laps=_laps(messages.get("lap_mesgs") or [], start),
+        session_stats=_session_stats(session),
     )
 
 
@@ -99,8 +164,8 @@ def import_fit_files(
     db_path: Path,
     *,
     limit: int | None = None,
-) -> tuple[list[int], list[int], list[tuple[str, str]]]:
-    """Insert FIT activities that are not already stored under the same id."""
+) -> tuple[list[int], list[int], list[int], list[tuple[str, str]]]:
+    """Insert new FIT activities, and backfill record streams when they are missing."""
 
     if limit is not None and limit < 1:
         raise FitParseError("limit must be >= 1")
@@ -111,6 +176,7 @@ def import_fit_files(
         files = files[:limit]
     connection = _connect(db_path)
     imported: list[int] = []
+    backfilled: list[int] = []
     skipped: list[int] = []
     failed: list[tuple[str, str]] = []
     try:
@@ -121,16 +187,21 @@ def import_fit_files(
                 failed.append((path.name, str(exc)))
                 logger.warning("failed %s: %s", path.name, exc)
                 continue
-            if _exists(connection, activity.id):
+            if not _exists(connection, activity.id):
+                _insert(connection, activity)
+                imported.append(activity.id)
+                logger.info("saved %s", activity.id)
+                continue
+            if _detail_imported(connection, activity.id):
                 skipped.append(activity.id)
                 logger.info("skipped %s", activity.id)
                 continue
-            _insert(connection, activity)
-            imported.append(activity.id)
-            logger.info("saved %s", activity.id)
+            _replace_detail(connection, activity)
+            backfilled.append(activity.id)
+            logger.info("backfilled %s", activity.id)
     finally:
         connection.close()
-    return imported, skipped, failed
+    return imported, backfilled, skipped, failed
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -154,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     try:
-        imported, skipped, failed = import_fit_files(
+        imported, backfilled, skipped, failed = import_fit_files(
             Path(args.input),
             Path(args.db),
             limit=args.limit,
@@ -162,7 +233,10 @@ def main(argv: list[str] | None = None) -> int:
     except FitParseError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
-    print(f"imported {len(imported)}, skipped {len(skipped)}, failed {len(failed)}")
+    print(
+        f"imported {len(imported)}, backfilled {len(backfilled)}, "
+        f"skipped {len(skipped)}, failed {len(failed)}"
+    )
     for name, reason in failed:
         print(f"failed {name}: {reason}")
     return 1 if failed else 0
@@ -171,6 +245,7 @@ def main(argv: list[str] | None = None) -> int:
 def _connect(db_path: Path) -> sqlite3.Connection:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
+    connection.execute("PRAGMA foreign_keys = ON")
     connection.execute("""
         CREATE TABLE IF NOT EXISTS activities (
             id INTEGER PRIMARY KEY,
@@ -188,9 +263,88 @@ def _connect(db_path: Path) -> sqlite3.Connection:
             start_lat REAL,
             start_lng REAL,
             summary_polyline TEXT NOT NULL,
-            source_file TEXT NOT NULL
+            source_file TEXT NOT NULL,
+            records_imported INTEGER NOT NULL DEFAULT 0,
+            session_stats TEXT
         )
         """)
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS records (
+            activity_id INTEGER NOT NULL,
+            elapsed REAL NOT NULL,
+            distance REAL,
+            speed REAL,
+            cadence INTEGER,
+            altitude REAL,
+            heart_rate INTEGER,
+            power INTEGER,
+            temperature REAL,
+            FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+        )
+        """)
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS laps (
+            activity_id INTEGER NOT NULL,
+            lap_index INTEGER NOT NULL,
+            elapsed REAL NOT NULL,
+            distance REAL,
+            lat REAL,
+            lng REAL,
+            timer_time REAL,
+            average_speed REAL,
+            max_speed REAL,
+            average_heartrate REAL,
+            max_heartrate REAL,
+            average_cadence REAL,
+            max_cadence REAL,
+            average_power REAL,
+            max_power REAL,
+            stats TEXT,
+            FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+        )
+        """)
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS records_activity_elapsed "
+        "ON records(activity_id, elapsed)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS laps_activity ON laps(activity_id, lap_index)"
+    )
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(activities)")}
+    if "records_imported" not in columns:
+        connection.execute(
+            "ALTER TABLE activities ADD COLUMN records_imported "
+            "INTEGER NOT NULL DEFAULT 0"
+        )
+    if "session_stats" not in columns:
+        connection.execute("ALTER TABLE activities ADD COLUMN session_stats TEXT")
+        connection.execute("UPDATE activities SET records_imported = 0")
+    record_columns = {
+        row[1] for row in connection.execute("PRAGMA table_info(records)")
+    }
+    if "temperature" not in record_columns:
+        connection.execute("ALTER TABLE records ADD COLUMN temperature REAL")
+        connection.execute("UPDATE activities SET records_imported = 0")
+    lap_columns = {row[1] for row in connection.execute("PRAGMA table_info(laps)")}
+    added_lap_column = False
+    for name in (
+        "timer_time",
+        "average_speed",
+        "max_speed",
+        "average_heartrate",
+        "max_heartrate",
+        "average_cadence",
+        "max_cadence",
+        "average_power",
+        "max_power",
+        "stats",
+    ):
+        if name not in lap_columns:
+            kind = "TEXT" if name == "stats" else "REAL"
+            connection.execute(f"ALTER TABLE laps ADD COLUMN {name} {kind}")
+            added_lap_column = True
+    if added_lap_column:
+        connection.execute("UPDATE activities SET records_imported = 0")
     connection.commit()
     return connection
 
@@ -201,6 +355,80 @@ def _exists(connection: sqlite3.Connection, activity_id: int) -> bool:
         (activity_id,),
     ).fetchone()
     return row is not None
+
+
+def _detail_imported(connection: sqlite3.Connection, activity_id: int) -> bool:
+    row = connection.execute(
+        "SELECT records_imported, session_stats FROM activities WHERE id = ?",
+        (activity_id,),
+    ).fetchone()
+    return row is not None and row[0] == 1 and bool(row[1])
+
+
+def _replace_detail(connection: sqlite3.Connection, activity: Activity) -> None:
+    connection.execute(
+        "UPDATE activities SET session_stats = ? WHERE id = ?",
+        (json.dumps(asdict(activity.session_stats), ensure_ascii=False), activity.id),
+    )
+    connection.execute("DELETE FROM records WHERE activity_id = ?", (activity.id,))
+    connection.executemany(
+        """
+        INSERT INTO records (
+            activity_id, elapsed, distance, speed, cadence, altitude,
+            heart_rate, power, temperature
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            (
+                activity.id,
+                record.elapsed,
+                record.distance,
+                record.speed,
+                record.cadence,
+                record.altitude,
+                record.heart_rate,
+                record.power,
+                record.temperature,
+            )
+            for record in activity.records
+        ],
+    )
+    connection.execute("DELETE FROM laps WHERE activity_id = ?", (activity.id,))
+    connection.executemany(
+        """
+        INSERT INTO laps (
+            activity_id, lap_index, elapsed, distance, lat, lng, timer_time,
+            average_speed, max_speed, average_heartrate, max_heartrate,
+            average_cadence, max_cadence, average_power, max_power, stats
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            (
+                activity.id,
+                lap.index,
+                lap.elapsed,
+                lap.distance,
+                lap.lat,
+                lap.lng,
+                lap.timer_time,
+                lap.average_speed,
+                lap.max_speed,
+                lap.average_heartrate,
+                lap.max_heartrate,
+                lap.average_cadence,
+                lap.max_cadence,
+                lap.average_power,
+                lap.max_power,
+                json.dumps(lap.stats, ensure_ascii=False) if lap.stats else None,
+            )
+            for lap in activity.laps
+        ],
+    )
+    connection.execute(
+        "UPDATE activities SET records_imported = 1 WHERE id = ?",
+        (activity.id,),
+    )
+    connection.commit()
 
 
 def _insert(connection: sqlite3.Connection, activity: Activity) -> None:
@@ -214,8 +442,9 @@ def _insert(connection: sqlite3.Connection, activity: Activity) -> None:
         INSERT INTO activities (
             id, name, type, subtype, start_date, start_date_local, distance,
             moving_time, elapsed_time, average_speed, average_heartrate,
-            elevation_gain, start_lat, start_lng, summary_polyline, source_file
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            elevation_gain, start_lat, start_lng, summary_polyline, source_file,
+            records_imported, session_stats
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             activity.id,
@@ -234,9 +463,11 @@ def _insert(connection: sqlite3.Connection, activity: Activity) -> None:
             activity.start_lng,
             activity.summary_polyline,
             activity.source_file,
+            0,
+            json.dumps(asdict(activity.session_stats), ensure_ascii=False),
         ),
     )
-    connection.commit()
+    _replace_detail(connection, activity)
 
 
 def _activity_name(name: str, local_start: datetime) -> str:
@@ -311,6 +542,191 @@ def _track(records: Iterable[object]) -> list[tuple[float, float]]:
             continue
         points.append((lat, lng))
     return points
+
+
+def _records(records: Iterable[object], start: datetime) -> tuple[Record, ...]:
+    samples: list[Record] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        timestamp = record.get("timestamp")
+        if timestamp is None:
+            continue
+        try:
+            elapsed = (_as_utc(timestamp) - start).total_seconds()
+        except FitParseError:
+            continue
+        if elapsed < 0:
+            continue
+        speed = _number(record.get("enhanced_speed"))
+        if speed is None:
+            speed = _number(record.get("speed"))
+        altitude = _number(record.get("enhanced_altitude"))
+        if altitude is None:
+            altitude = _number(record.get("altitude"))
+        samples.append(
+            Record(
+                elapsed=elapsed,
+                distance=_number(record.get("distance")),
+                speed=speed,
+                cadence=_int(record.get("cadence")),
+                altitude=altitude,
+                heart_rate=_int(record.get("heart_rate")),
+                power=_int(record.get("power")),
+                temperature=_number(record.get("temperature")),
+            )
+        )
+    return tuple(samples)
+
+
+def _laps(messages: Iterable[object], start: datetime) -> tuple[Lap, ...]:
+    laps: list[Lap] = []
+    for offset, message in enumerate(messages, start=1):
+        if not isinstance(message, dict):
+            continue
+        timestamp = message.get("start_time")
+        elapsed = 0.0
+        if timestamp is not None:
+            try:
+                elapsed = max((_as_utc(timestamp) - start).total_seconds(), 0.0)
+            except FitParseError:
+                elapsed = 0.0
+        index = message.get("message_index")
+        if isinstance(index, dict):
+            index = index.get("value")
+        lat = _degrees(message.get("end_position_lat"))
+        lng = _degrees(message.get("end_position_long"))
+        if lat is None or lng is None:
+            lat = _degrees(message.get("start_position_lat"))
+            lng = _degrees(message.get("start_position_long"))
+        timer = message.get("total_timer_time")
+        if timer is None:
+            timer = message.get("total_moving_time")
+        laps.append(
+            Lap(
+                index=_int(index) or offset,
+                elapsed=elapsed,
+                distance=_number(message.get("total_distance")),
+                lat=lat,
+                lng=lng,
+                timer_time=_number(timer),
+                average_speed=_first_number(
+                    message.get("enhanced_avg_speed"),
+                    message.get("avg_speed"),
+                ),
+                max_speed=_first_number(
+                    message.get("enhanced_max_speed"),
+                    message.get("max_speed"),
+                ),
+                average_heartrate=_number(message.get("avg_heart_rate")),
+                max_heartrate=_number(message.get("max_heart_rate")),
+                average_cadence=_number(message.get("avg_cadence")),
+                max_cadence=_number(message.get("max_cadence")),
+                average_power=_number(message.get("avg_power")),
+                max_power=_number(message.get("max_power")),
+                stats=_lap_stats(message, _number(timer)),
+            )
+        )
+    return tuple(laps)
+
+
+def _lap_stats(
+    message: dict[str, object], timer: float | None
+) -> dict[str, float | None]:
+    elapsed = _number(message.get("total_elapsed_time"))
+    moving = _number(message.get("total_moving_time"))
+    stats: dict[str, float | None] = {
+        "calories": _number(message.get("total_calories")),
+        "average_altitude": _first_number(
+            message.get("enhanced_avg_altitude"),
+            message.get("avg_altitude"),
+        ),
+        "max_altitude": _first_number(
+            message.get("enhanced_max_altitude"),
+            message.get("max_altitude"),
+        ),
+        "min_altitude": _first_number(
+            message.get("enhanced_min_altitude"),
+            message.get("min_altitude"),
+        ),
+        "elevation_gain": _number(message.get("total_ascent")),
+        "elevation_loss": _number(message.get("total_descent")),
+        "average_temperature": _number(message.get("avg_temperature")),
+        "max_temperature": _number(message.get("max_temperature")),
+        "avg_pos_grade": _number(message.get("avg_pos_grade")),
+        "max_pos_grade": _number(message.get("max_pos_grade")),
+        "avg_neg_grade": _number(message.get("avg_neg_grade")),
+        "max_neg_grade": _number(message.get("max_neg_grade")),
+        "avg_pos_vertical_speed": _number(message.get("avg_pos_vertical_speed")),
+        "max_pos_vertical_speed": _number(message.get("max_pos_vertical_speed")),
+        "avg_neg_vertical_speed": _number(message.get("avg_neg_vertical_speed")),
+        "max_neg_vertical_speed": _number(message.get("max_neg_vertical_speed")),
+    }
+    if elapsed is not None and elapsed != timer:
+        stats["elapsed_time"] = elapsed
+    if moving is not None and moving != timer:
+        stats["moving_time"] = moving
+    return {key: value for key, value in stats.items() if value is not None}
+
+
+def _session_stats(session: dict[str, object]) -> SessionStats:
+    max_speed = session.get("enhanced_max_speed")
+    if max_speed is None:
+        max_speed = session.get("max_speed")
+    return SessionStats(
+        calories=_number(session.get("total_calories")),
+        elevation_loss=_number(session.get("total_descent")),
+        max_speed=_number(max_speed),
+        average_cadence=_number(session.get("avg_cadence")),
+        max_cadence=_number(session.get("max_cadence")),
+        max_heartrate=_number(session.get("max_heart_rate")),
+        average_power=_number(session.get("avg_power")),
+        max_power=_number(session.get("max_power")),
+        average_altitude=_first_number(
+            session.get("enhanced_avg_altitude"),
+            session.get("avg_altitude"),
+        ),
+        max_altitude=_first_number(
+            session.get("enhanced_max_altitude"),
+            session.get("max_altitude"),
+        ),
+        min_altitude=_first_number(
+            session.get("enhanced_min_altitude"),
+            session.get("min_altitude"),
+        ),
+        average_temperature=_number(session.get("avg_temperature")),
+        max_temperature=_number(session.get("max_temperature")),
+        timer_time=_number(session.get("total_timer_time")),
+        avg_pos_grade=_number(session.get("avg_pos_grade")),
+        max_pos_grade=_number(session.get("max_pos_grade")),
+        avg_neg_grade=_number(session.get("avg_neg_grade")),
+        max_neg_grade=_number(session.get("max_neg_grade")),
+        avg_pos_vertical_speed=_number(session.get("avg_pos_vertical_speed")),
+        max_pos_vertical_speed=_number(session.get("max_pos_vertical_speed")),
+        avg_neg_vertical_speed=_number(session.get("avg_neg_vertical_speed")),
+        max_neg_vertical_speed=_number(session.get("max_neg_vertical_speed")),
+    )
+
+
+def _first_number(*values: object) -> float | None:
+    for value in values:
+        number = _number(value)
+        if number is not None:
+            return number
+    return None
+
+
+def _number(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return float(value)
+
+
+def _int(value: object) -> int | None:
+    number = _number(value)
+    if number is None:
+        return None
+    return int(number)
 
 
 def _format(value: datetime) -> str:

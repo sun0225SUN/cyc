@@ -16,22 +16,22 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.ACTION_TOKEN }}
-          persist-credentials: true
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: backend/uv.lock
+          working-directory: backend
 
       - name: Restore downloaded rides
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             backend/data/raw

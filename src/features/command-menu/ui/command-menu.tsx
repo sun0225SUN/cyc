@@ -88,6 +88,7 @@ export function CommandMenu() {
         className='command-menu-overlay'
         aria-label={t('close')}
         onClick={close}
+        data-umami-event='command-close'
       />
       <div className='command-menu-content'>
         <div className='command-menu raycast'>
@@ -96,14 +97,24 @@ export function CommandMenu() {
             <Command.List>
               <Command.Empty>{t('empty')}</Command.Empty>
               <Command.Group heading={t('suggestions')}>
-                <Command.Item onSelect={toggleTheme}>
+                <Command.Item
+                  onSelect={toggleTheme}
+                  data-umami-event='command-theme'
+                  data-umami-event-theme={
+                    resolvedTheme === 'dark' ? 'light' : 'dark'
+                  }
+                >
                   <span>🌓</span>
                   {resolvedTheme === 'dark'
                     ? t('toggleLight')
                     : t('toggleDark')}
                   <span className='raycast-meta'>{t('command')}</span>
                 </Command.Item>
-                <Command.Item onSelect={switchLanguage}>
+                <Command.Item
+                  onSelect={switchLanguage}
+                  data-umami-event='command-language'
+                  data-umami-event-locale={nextLocale}
+                >
                   <span>🌐</span>
                   {t('switchTo', { language: language(nextLocale) })}
                   <span className='raycast-meta'>{t('command')}</span>
@@ -111,27 +122,47 @@ export function CommandMenu() {
               </Command.Group>
               <Command.Separator />
               <Command.Group heading={t('commands')}>
-                <Command.Item onSelect={() => goTo(targets.map)}>
+                <Command.Item
+                  onSelect={() => goTo(targets.map)}
+                  data-umami-event='command-goto'
+                  data-umami-event-target='map'
+                >
                   <span>🗺️</span>
                   {t('map')}
                   <span className='raycast-meta'>{t('page')}</span>
                 </Command.Item>
-                <Command.Item onSelect={() => goTo(targets.heatmap)}>
+                <Command.Item
+                  onSelect={() => goTo(targets.heatmap)}
+                  data-umami-event='command-goto'
+                  data-umami-event-target='heatmap'
+                >
                   <span>📅</span>
                   {t('heatmap')}
                   <span className='raycast-meta'>{t('page')}</span>
                 </Command.Item>
-                <Command.Item onSelect={() => goTo(targets.activities)}>
+                <Command.Item
+                  onSelect={() => goTo(targets.activities)}
+                  data-umami-event='command-goto'
+                  data-umami-event-target='activities'
+                >
                   <span>🚴</span>
                   {t('activities')}
                   <span className='raycast-meta'>{t('page')}</span>
                 </Command.Item>
-                <Command.Item onSelect={() => goTo(targets.tracks)}>
+                <Command.Item
+                  onSelect={() => goTo(targets.tracks)}
+                  data-umami-event='command-goto'
+                  data-umami-event-target='tracks'
+                >
                   <span>📍</span>
                   {t('tracks')}
                   <span className='raycast-meta'>{t('page')}</span>
                 </Command.Item>
-                <Command.Item onSelect={() => goTo(targets.summary)}>
+                <Command.Item
+                  onSelect={() => goTo(targets.summary)}
+                  data-umami-event='command-goto'
+                  data-umami-event-target='summary'
+                >
                   <span>📊</span>
                   {t('summary')}
                   <span className='raycast-meta'>{t('page')}</span>
@@ -141,6 +172,7 @@ export function CommandMenu() {
                     window.open(githubRepositoryUrl, '_blank', 'noopener')
                     close()
                   }}
+                  data-umami-event='command-github'
                 >
                   <span>🐙</span>
                   {t('github')}

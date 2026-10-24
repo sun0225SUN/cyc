@@ -35,6 +35,7 @@ export function PageSwitch({
           disabled={page === 0}
           aria-label={t('previous')}
           className={iconButton}
+          data-umami-event='page-up'
         >
           <ChevronUp size={21} strokeWidth={2.25} nonScalingStroke />
         </button>
@@ -44,6 +45,7 @@ export function PageSwitch({
           disabled={page === pageCount - 1}
           aria-label={t('next')}
           className={iconButton}
+          data-umami-event='page-down'
         >
           <ChevronDown size={21} strokeWidth={2.25} nonScalingStroke />
         </button>

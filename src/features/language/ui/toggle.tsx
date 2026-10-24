@@ -38,6 +38,7 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
           'text-foreground inline-flex shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-0',
           className,
         )}
+        data-umami-event='language-menu'
       >
         <Globe
           className={cn('size-6', className)}
@@ -65,6 +66,8 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
                 setIsOpen(false)
                 onSelectChange(locale)
               }}
+              data-umami-event='language'
+              data-umami-event-locale={locale}
               className={cn(
                 'w-full cursor-pointer justify-between text-sm font-normal focus-visible:border-none focus-visible:ring-0',
                 locale === currentLocale && 'bg-accent dark:bg-accent/50',

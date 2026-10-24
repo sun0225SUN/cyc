@@ -51,6 +51,8 @@ export function MapToolbar({
               disabled={isTransitioning}
               aria-label={isGlobe ? t('flat') : t('globe')}
               className={iconButton}
+              data-umami-event='map-projection'
+              data-umami-event-view={isGlobe ? 'flat' : 'globe'}
             >
               <Rotate3d
                 size={22}
@@ -70,6 +72,8 @@ export function MapToolbar({
               onClick={onToggleRotate}
               aria-label={isRotating ? t('pause') : t('rotate')}
               className={iconButton}
+              data-umami-event='map-rotate'
+              data-umami-event-playing={String(!isRotating)}
             >
               {isRotating ? (
                 <CirclePause size={22} strokeWidth={2.25} nonScalingStroke />
@@ -85,6 +89,7 @@ export function MapToolbar({
           rel='noopener noreferrer'
           aria-label={t('github')}
           className={iconButton}
+          data-umami-event='github'
         >
           <GithubIcon size={22} strokeWidth={2.25} nonScalingStroke />
         </a>
@@ -116,6 +121,7 @@ export function MapCameraBar({
           onClick={onLocate}
           aria-label={t('locate')}
           className={iconButton}
+          data-umami-event='map-locate'
         >
           <LocateFixed size={22} strokeWidth={2.25} nonScalingStroke />
         </button>
@@ -124,6 +130,7 @@ export function MapCameraBar({
           onClick={onZoomIn}
           aria-label={t('zoomIn')}
           className={iconButton}
+          data-umami-event='map-zoom-in'
         >
           <Plus size={22} strokeWidth={2.25} nonScalingStroke />
         </button>
@@ -132,6 +139,7 @@ export function MapCameraBar({
           onClick={onZoomOut}
           aria-label={t('zoomOut')}
           className={iconButton}
+          data-umami-event='map-zoom-out'
         >
           <Minus size={22} strokeWidth={2.25} nonScalingStroke />
         </button>

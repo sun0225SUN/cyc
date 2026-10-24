@@ -90,6 +90,9 @@ export function RideTracks({
                   <div key={activity.run_id} className='relative'>
                     <button
                       type='button'
+                      data-umami-event='open-ride'
+                      data-umami-event-ride={activity.run_id}
+                      data-umami-event-source='tracks'
                       aria-label={t('track', {
                         date: dateFormat.format(new Date(`${date}T00:00:00`)),
                         name,

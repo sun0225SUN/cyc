@@ -59,6 +59,7 @@ export function RideExplorer({
           <YearTabs
             years={years}
             selectedYear={heatmapYear}
+            section='heatmap'
             onYearChange={(next) => {
               setHeatmapYear(next)
               setSelectedDate(null)
@@ -80,6 +81,7 @@ export function RideExplorer({
           <YearTabs
             years={years}
             selectedYear={listYear}
+            section='list'
             onYearChange={(next) => {
               setListYear(next)
               if (
@@ -101,6 +103,7 @@ export function RideExplorer({
           <YearTabs
             years={years}
             selectedYear={tracksYear}
+            section='tracks'
             onYearChange={setTracksYear}
           />
         }
@@ -114,6 +117,7 @@ export function RideExplorer({
           <YearTabs
             years={years}
             selectedYear={summaryYear}
+            section='summary'
             onYearChange={setSummaryYear}
           />
         }

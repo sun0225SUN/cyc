@@ -113,6 +113,15 @@ export function RideMap({
       const activity = activities.find((item) => item.run_id === id)
       if (activity) {
         setIsRotating(false)
+        // Umami injects window.umami in production.
+        ;(
+          window as unknown as {
+            umami?: { track: (name: string, data?: object) => void }
+          }
+        ).umami?.track('open-ride', {
+          ride: activity.run_id,
+          source: 'map',
+        })
         onSelect?.(activity)
       }
     })

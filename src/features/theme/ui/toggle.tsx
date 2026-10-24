@@ -39,6 +39,8 @@ export function ThemeToggle({ strokeWidth = 2, className }: ThemeToggleProps) {
         className,
       )}
       aria-label='Toggle theme'
+      data-umami-event='theme'
+      data-umami-event-theme={resolvedTheme === 'light' ? 'dark' : 'light'}
     >
       <Sun
         className={cn('size-6 dark:hidden', className)}

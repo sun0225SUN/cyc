@@ -124,6 +124,9 @@ export function RideList({
                 type='button'
                 key={activity.run_id}
                 onClick={() => onSelect?.(activity)}
+                data-umami-event='open-ride'
+                data-umami-event-ride={activity.run_id}
+                data-umami-event-source='list'
                 data-active={
                   selectedRideId === activity.run_id ||
                   selectedDate === activity.start_date_local.slice(0, 10)
@@ -162,6 +165,7 @@ export function RideList({
             onClick={() => goToPage(Math.max(0, page - 1))}
             disabled={page === 0}
             aria-label={t('previousPage')}
+            data-umami-event='rides-page-prev'
             className='text-muted-foreground grid size-10 cursor-pointer place-items-center rounded-full border transition-[color,background-color,transform,opacity] hover:bg-black/3 active:scale-90 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-white/5'
           >
             <ArrowLeft size={18} strokeWidth={2} nonScalingStroke />
@@ -177,6 +181,7 @@ export function RideList({
             onClick={() => goToPage(Math.min(totalPages - 1, page + 1))}
             disabled={page >= totalPages - 1}
             aria-label={t('nextPage')}
+            data-umami-event='rides-page-next'
             className='text-muted-foreground grid size-10 cursor-pointer place-items-center rounded-full border transition-[color,background-color,transform,opacity] hover:bg-black/3 active:scale-90 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-white/5'
           >
             <ArrowRight size={18} strokeWidth={2} nonScalingStroke />

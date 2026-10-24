@@ -113,6 +113,8 @@ export function RideSummary({
                       tabIndex={hidden ? -1 : 0}
                       aria-pressed={activePeriod === value}
                       onClick={() => setPeriod(value)}
+                      data-umami-event='summary-period'
+                      data-umami-event-period={value}
                       className='ride-summary-tab cursor-pointer rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,transform,opacity] active:scale-95'
                     >
                       {t(value)}

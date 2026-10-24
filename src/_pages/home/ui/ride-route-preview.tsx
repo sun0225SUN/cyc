@@ -128,6 +128,7 @@ export function RideRoutePreview({ activity, token }: RideRoutePreviewProps) {
           type='button'
           onClick={() => zoomBy(1)}
           aria-label={t('zoomIn')}
+          data-umami-event='ride-zoom-in'
           className='grid size-11 cursor-pointer place-items-center transition-colors hover:bg-black/7 active:bg-black/12 dark:hover:bg-white/12 dark:active:bg-white/18'
         >
           <Plus size={20} strokeWidth={2.25} />
@@ -136,6 +137,7 @@ export function RideRoutePreview({ activity, token }: RideRoutePreviewProps) {
           type='button'
           onClick={() => zoomBy(-1)}
           aria-label={t('zoomOut')}
+          data-umami-event='ride-zoom-out'
           className='grid size-11 cursor-pointer place-items-center transition-colors hover:bg-black/7 active:bg-black/12 dark:hover:bg-white/12 dark:active:bg-white/18'
         >
           <Minus size={20} strokeWidth={2.25} />

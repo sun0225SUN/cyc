@@ -69,6 +69,9 @@ export function RideDetail({
         onClick={onBack}
         aria-label={t('back')}
         className='absolute inset-0 cursor-default bg-black/55 backdrop-blur-sm'
+        data-umami-event='close-ride'
+        data-umami-event-ride={activity.run_id}
+        data-umami-event-source='backdrop'
       />
       <article
         role='dialog'
@@ -82,6 +85,9 @@ export function RideDetail({
           onClick={onBack}
           aria-label={t('back')}
           className='absolute top-5 right-5 z-10 grid size-10 cursor-pointer place-items-center rounded-full bg-white/80 text-neutral-700 shadow-sm backdrop-blur-md transition-colors hover:bg-white dark:bg-black/65 dark:text-white dark:hover:bg-black/85'
+          data-umami-event='close-ride'
+          data-umami-event-ride={activity.run_id}
+          data-umami-event-source='button'
         >
           <X size={20} />
         </button>
@@ -119,6 +125,8 @@ export function RideDetail({
                     key={ride.run_id}
                     onClick={() => onSelectOccurrence?.(ride)}
                     aria-pressed={ride.run_id === activity.run_id}
+                    data-umami-event='ride-occurrence'
+                    data-umami-event-ride={ride.run_id}
                     className='year-tab cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-[color,background-color,border-color,transform] active:scale-95'
                   >
                     {formatName(ride.name)}

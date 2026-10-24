@@ -120,6 +120,8 @@ function YearGrid({
                       type='button'
                       key={day.date}
                       disabled={!day.inYear || day.count === 0}
+                      data-umami-event='heatmap-day'
+                      data-umami-event-date={day.date}
                       data-level={day.inYear ? day.intensity : 0}
                       data-active={selectedDate === day.date}
                       aria-label={day.inYear ? detail : undefined}

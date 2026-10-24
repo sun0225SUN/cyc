@@ -31,7 +31,7 @@ class IGPSport:
 
     def __init__(
         self,
-        username: str = "",
+        phone: str = "",
         password: str = "",
         access_token: str = "",
         *,
@@ -40,7 +40,7 @@ class IGPSport:
     ) -> None:
         if page_size < 1:
             raise IGPSportError("page_size must be >= 1")
-        self.username = username
+        self.phone = phone
         self.password = password
         self.access_token = access_token.strip()
         self.page_size = page_size
@@ -65,15 +65,15 @@ class IGPSport:
         if self.access_token:
             self._http.headers["Authorization"] = f"Bearer {self.access_token}"
             return
-        if not self.username or not self.password:
-            raise IGPSportError("iGPSPORT username and password are required")
+        if not self.phone or not self.password:
+            raise IGPSportError("iGPSPORT phone and password are required")
         response = self._send(
             lambda: self._http.build_request(
                 "POST",
                 LOGIN_URL,
                 json={
                     "appId": "igpsport-web",
-                    "username": self.username,
+                    "username": self.phone,
                     "password": self.password,
                 },
             )
@@ -216,7 +216,7 @@ def sync_fit(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Download iGPSPORT FIT files.")
-    parser.add_argument("--username", default=None, help="Overrides IGPSPORT_USERNAME")
+    parser.add_argument("--phone", default=None, help="Overrides IGPSPORT_PHONE")
     parser.add_argument("--password", default=None, help="Overrides IGPSPORT_PASSWORD")
     parser.add_argument(
         "--access-token",
@@ -237,8 +237,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     try:
-        username, password, access_token, output_dir, limit = _settings(args)
-        with IGPSport(username, password, access_token) as client:
+        phone, password, access_token, output_dir, limit = _settings(args)
+        with IGPSport(phone, password, access_token) as client:
             downloaded, skipped, failed = sync_fit(client, output_dir, limit=limit)
     except IGPSportError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -259,18 +259,18 @@ def _settings(
     if dotenv.is_file():
         merged.update(_read_env_file(dotenv))
     merged.update(os.environ)
-    if args.username is not None:
-        merged["IGPSPORT_USERNAME"] = args.username
+    if args.phone is not None:
+        merged["IGPSPORT_PHONE"] = args.phone
     if args.password is not None:
         merged["IGPSPORT_PASSWORD"] = args.password
     if args.access_token is not None:
         merged["IGPSPORT_ACCESS_TOKEN"] = args.access_token
-    username = merged.get("IGPSPORT_USERNAME", "").strip()
+    phone = merged.get("IGPSPORT_PHONE", "").strip()
     password = merged.get("IGPSPORT_PASSWORD", "").strip()
     access_token = merged.get("IGPSPORT_ACCESS_TOKEN", "").strip()
-    if not access_token and (not username or not password):
+    if not access_token and (not phone or not password):
         raise IGPSportError(
-            "set IGPSPORT_ACCESS_TOKEN, or both IGPSPORT_USERNAME and IGPSPORT_PASSWORD"
+            "set IGPSPORT_ACCESS_TOKEN, or both IGPSPORT_PHONE and IGPSPORT_PASSWORD"
         )
     output_value = (
         args.output if args.output is not None else merged.get("ACTIVITY_DATA_DIR")
@@ -280,7 +280,7 @@ def _settings(
         if output_value and output_value.strip()
         else Path("data/raw")
     )
-    return username, password, access_token, output_dir, args.limit
+    return phone, password, access_token, output_dir, args.limit
 
 
 def _read_env_file(path: Path) -> dict[str, str]:

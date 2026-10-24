@@ -14,7 +14,7 @@ You need [uv](https://docs.astral.sh/uv/) and Python 3.12 or newer.
 
 ```bash
 cp .env.example .env
-# set IGPSPORT_USERNAME and IGPSPORT_PASSWORD
+# set IGPSPORT_PHONE and IGPSPORT_PASSWORD
 # or set IGPSPORT_ACCESS_TOKEN from a login response to skip login this run
 make refresh
 ```
@@ -36,6 +36,6 @@ make test
 make refresh
 ```
 
-The `Refresh rides` Action runs `make refresh` at midnight in Asia/Shanghai and commits `data/activities.json` when it changes. Set `IGPSPORT_USERNAME`, `IGPSPORT_PASSWORD` (or `IGPSPORT_ACCESS_TOKEN`), and an `ACTION_TOKEN` that can push `main`. You can also run the workflow by hand.
+The `Refresh rides` Action runs `make refresh` at midnight in Asia/Shanghai and commits `data/activities.json` when it changes. Set `IGPSPORT_PHONE`, `IGPSPORT_PASSWORD`, and an `ACTION_TOKEN` that can push `main`. You can also run the workflow by hand.
 
 The license is the same as cyc: GPL-3.0-only.

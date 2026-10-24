@@ -18,14 +18,14 @@ def fit_bytes(payload: bytes = b"records") -> bytes:
 def client(
     handler: Callable[[httpx.Request], httpx.Response],
     *,
-    username: str = "",
+    phone: str = "",
     password: str = "",
     access_token: str = "",
     page_size: int = 20,
 ) -> IGPSport:
     http = httpx.Client(transport=httpx.MockTransport(handler))
     return IGPSport(
-        username,
+        phone,
         password,
         access_token,
         page_size=page_size,
@@ -53,7 +53,7 @@ def test_login_stores_access_token() -> None:
         }
         return httpx.Response(200, json={"data": {"access_token": "fresh"}})
 
-    sport = client(handler, username="13800000000", password="secret")
+    sport = client(handler, phone="13800000000", password="secret")
     sport.login()
 
     assert sport.access_token == "fresh"
@@ -69,7 +69,7 @@ def test_login_retries_then_reads_the_token() -> None:
             raise httpx.ConnectError("down")
         return httpx.Response(200, json={"data": {"access_token": "fresh"}})
 
-    sport = client(handler, username="user", password="secret")
+    sport = client(handler, phone="user", password="secret")
     sport.login()
 
     assert calls["count"] == 3
@@ -79,7 +79,7 @@ def test_login_without_token_does_not_echo_the_password() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"data": {}})
 
-    sport = client(handler, username="user", password="secret")
+    sport = client(handler, phone="user", password="secret")
     with pytest.raises(IGPSportError, match="access token") as exc_info:
         sport.login()
 
@@ -202,7 +202,7 @@ def test_sync_limit_counts_skipped_activities(tmp_path: Path) -> None:
 
 def test_cli_does_not_print_the_password(tmp_path: Path, monkeypatch, capsys) -> None:
     class Fake:
-        def __init__(self, username: str, password: str, access_token: str) -> None:
+        def __init__(self, phone: str, password: str, access_token: str) -> None:
             self.password = password
 
         def __enter__(self) -> "Fake":
@@ -224,7 +224,7 @@ def test_cli_does_not_print_the_password(tmp_path: Path, monkeypatch, capsys) ->
     monkeypatch.chdir(tmp_path)
     code = main(
         [
-            "--username",
+            "--phone",
             "13800000000",
             "--password",
             "super-secret-password",
@@ -242,7 +242,7 @@ def test_cli_does_not_print_the_password(tmp_path: Path, monkeypatch, capsys) ->
 
 def test_cli_reports_missing_credentials(tmp_path: Path, monkeypatch, capsys) -> None:
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("IGPSPORT_USERNAME", raising=False)
+    monkeypatch.delenv("IGPSPORT_PHONE", raising=False)
     monkeypatch.delenv("IGPSPORT_PASSWORD", raising=False)
     monkeypatch.delenv("IGPSPORT_ACCESS_TOKEN", raising=False)
 

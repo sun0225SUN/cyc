@@ -43,9 +43,8 @@ jobs:
       - name: Fetch, parse, and export
         working-directory: backend
         env:
-          IGPSPORT_USERNAME: ${{ secrets.IGPSPORT_USERNAME }}
+          IGPSPORT_PHONE: ${{ secrets.IGPSPORT_PHONE }}
           IGPSPORT_PASSWORD: ${{ secrets.IGPSPORT_PASSWORD }}
-          IGPSPORT_ACCESS_TOKEN: ${{ secrets.IGPSPORT_ACCESS_TOKEN }}
         run: make refresh
 
       - name: Commit activities

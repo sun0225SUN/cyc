@@ -101,7 +101,7 @@ Activity files stay in `backend/`. The page reads `data/activities.json`.
 ```bash
 cd backend
 cp .env.example .env
-# set IGPSPORT_USERNAME and IGPSPORT_PASSWORD
+# set IGPSPORT_PHONE and IGPSPORT_PASSWORD
 make refresh
 ```
 
@@ -110,7 +110,7 @@ make -C backend check
 make -C backend test
 ```
 
-The `Refresh rides` Action runs `make refresh` at midnight in Asia/Shanghai and commits `data/activities.json` when it changes. Set `IGPSPORT_USERNAME`, `IGPSPORT_PASSWORD` (or `IGPSPORT_ACCESS_TOKEN`), and an `ACTION_TOKEN` that can push `main`. You can also run the workflow by hand.
+The `Refresh rides` Action runs `make refresh` at midnight in Asia/Shanghai and commits `data/activities.json` when it changes. Set `IGPSPORT_PHONE`, `IGPSPORT_PASSWORD`, and an `ACTION_TOKEN` that can push `main`. You can also run the workflow by hand.
 
 More detail: [`backend/README.md`](backend/README.md). Chinese: [`backend/README_zh.md`](backend/README_zh.md).
 

@@ -101,7 +101,7 @@ bun run test
 ```bash
 cd backend
 cp .env.example .env
-# 填写 IGPSPORT_USERNAME 和 IGPSPORT_PASSWORD
+# 填写 IGPSPORT_PHONE 和 IGPSPORT_PASSWORD
 make refresh
 ```
 
@@ -110,7 +110,7 @@ make -C backend check
 make -C backend test
 ```
 
-`Refresh rides` Action 会在东八区每天 0 点跑 `make refresh`，`data/activities.json` 有变化就提交到 `main`。需要仓库 Secrets：`IGPSPORT_USERNAME`、`IGPSPORT_PASSWORD`（或 `IGPSPORT_ACCESS_TOKEN`），以及能推 `main` 的 `ACTION_TOKEN`。也可以在 Actions 里手动触发。
+`Refresh rides` Action 会在东八区每天 0 点跑 `make refresh`，`data/activities.json` 有变化就提交到 `main`。需要仓库 Secrets：`IGPSPORT_PHONE`、`IGPSPORT_PASSWORD`，以及能推 `main` 的 `ACTION_TOKEN`。也可以在 Actions 里手动触发。
 
 更细的说明见 [`backend/README_zh.md`](backend/README_zh.md)。英文：[`backend/README.md`](backend/README.md)。
 

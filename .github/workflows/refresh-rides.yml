@@ -1,0 +1,67 @@
+name: Refresh rides
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 00:00 Asia/Shanghai. GitHub cron is UTC; China has no DST.
+    - cron: "0 16 * * *"
+
+concurrency:
+  group: refresh-rides
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTION_TOKEN }}
+          persist-credentials: true
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Restore downloaded rides
+        uses: actions/cache@v4
+        with:
+          path: |
+            backend/data/raw
+            backend/data/activities.db
+          key: rides-${{ github.run_id }}
+          restore-keys: |
+            rides-
+
+      - name: Fetch, parse, and export
+        working-directory: backend
+        env:
+          IGPSPORT_USERNAME: ${{ secrets.IGPSPORT_USERNAME }}
+          IGPSPORT_PASSWORD: ${{ secrets.IGPSPORT_PASSWORD }}
+          IGPSPORT_ACCESS_TOKEN: ${{ secrets.IGPSPORT_ACCESS_TOKEN }}
+        run: |
+          uv sync
+          make refresh
+
+      - name: Commit activities
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/activities.json
+          if git diff --cached --quiet; then
+            echo 'no ride changes'
+            exit 0
+          fi
+          git commit -m "$(cat <<'EOF'
+          :card_file_box: chore(data): refresh activities json
+
+          EOF
+          )"
+          git push

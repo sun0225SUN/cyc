@@ -1,15 +1,16 @@
-.PHONY: help fetch test lint format check ci
+.PHONY: help fetch parse export refresh test lint format check ci
 
 help:
 	@echo "Available targets:"
-	@echo "  make fetch   - Download iGPSPORT FIT files"
-	@echo "  make parse   - Parse FIT files into SQLite"
-	@echo "  make export  - Write activities.json from SQLite"
-	@echo "  make test    - Run Python tests"
-	@echo "  make lint    - Lint with Ruff"
-	@echo "  make format  - Format with Black and fix Ruff issues"
-	@echo "  make check   - Check Black formatting and Ruff"
-	@echo "  make ci      - Run check and test"
+	@echo "  make fetch    - Download iGPSPORT FIT files"
+	@echo "  make parse    - Parse FIT files into SQLite"
+	@echo "  make export   - Write activities.json from SQLite"
+	@echo "  make refresh  - Fetch, parse, and export"
+	@echo "  make test     - Run Python tests"
+	@echo "  make lint     - Lint with Ruff"
+	@echo "  make format   - Format with Black and fix Ruff issues"
+	@echo "  make check    - Check Black formatting and Ruff"
+	@echo "  make ci       - Run check and test"
 
 fetch:
 	uv run igpsport-sync
@@ -19,6 +20,8 @@ parse:
 
 export:
 	uv run export-activities
+
+refresh: fetch parse export
 
 test:
 	uv run pytest

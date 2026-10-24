@@ -5,7 +5,10 @@ import { HomeDeck } from './home-deck'
 
 export async function generateMetadata() {
   const t = await getTranslations('site')
-  return { title: t('name') }
+  return {
+    title: t('title'),
+    description: t('description'),
+  }
 }
 
 export async function HomePage() {

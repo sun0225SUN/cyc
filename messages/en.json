@@ -5,7 +5,10 @@
     "zh": "简体中文"
   },
   "site": {
-    "name": "cyc"
+    "name": "cyc",
+    "title": "cyc · personal cycling home",
+    "description": "A personal cycling home page with a globe of every ride, year heatmap, clustered tracks, and summary charts.",
+    "ogImageAlt": "cyc homepage globe with ride traces"
   },
   "commandMenu": {
     "placeholder": "Search commands…",

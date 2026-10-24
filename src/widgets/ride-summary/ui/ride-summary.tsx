@@ -77,7 +77,7 @@ export function RideSummary({
   )
 
   return (
-    <div className='ride-summary'>
+    <div id='ride-summary' className='ride-summary'>
       <div className='mx-auto flex w-full max-w-6xl flex-col px-6 pt-8 pb-24 md:px-10'>
         <header className='flex flex-wrap items-end justify-between gap-5'>
           <div>

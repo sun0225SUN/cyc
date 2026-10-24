@@ -179,7 +179,7 @@ export function RideHeatmap({
   )
 
   return (
-    <div className='ride-heatmap'>
+    <div id='ride-heatmap' className='ride-heatmap'>
       <div className='mx-auto w-full max-w-6xl px-6 pt-16 pb-6 md:px-10'>
         <header className='flex flex-wrap items-end justify-between gap-5'>
           <div>
@@ -224,7 +224,7 @@ export function RideHeatmap({
         ? createPortal(
             <div
               role='tooltip'
-              className='pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-lg border bg-background px-2 py-1 text-xs shadow-xl'
+              className='bg-background pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-lg border px-2 py-1 text-xs shadow-xl'
               style={{ left: hover.x, top: hover.y - 8 }}
             >
               {hover.label}

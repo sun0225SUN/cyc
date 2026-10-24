@@ -7,6 +7,27 @@
   "site": {
     "name": "cyc"
   },
+  "commandMenu": {
+    "placeholder": "Search commands…",
+    "empty": "No results found",
+    "suggestions": "Suggestions",
+    "commands": "Commands",
+    "command": "Command",
+    "page": "Page",
+    "link": "Link",
+    "toggleLight": "Switch to light mode",
+    "toggleDark": "Switch to dark mode",
+    "switchTo": "Switch to {language}",
+    "map": "Map",
+    "heatmap": "Heatmap",
+    "activities": "Activities",
+    "tracks": "Tracks",
+    "summary": "Summary",
+    "github": "GitHub",
+    "open": "Open",
+    "actions": "Actions",
+    "close": "Close command menu"
+  },
   "activityNames": {
     "lateNight": "Late-night Ride",
     "earlyMorning": "Early Morning Ride",

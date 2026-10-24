@@ -63,7 +63,7 @@ export function RideTracks({
   }
 
   return (
-    <div className='ride-tracks'>
+    <div id='ride-tracks' className='ride-tracks'>
       <div className='mx-auto flex w-full max-w-6xl flex-col px-6 pt-8 pb-24 md:px-10'>
         <header className='flex flex-wrap items-end justify-between gap-5'>
           <div>

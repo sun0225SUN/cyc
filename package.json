@@ -18,6 +18,7 @@
     "@mapbox/mapbox-gl-language": "^1.0.1",
     "@mapbox/polyline": "^1.2.1",
     "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
     "cn": "^0.5.0",
     "lucide-react": "^1.61.0",
     "mapbox-gl": "^3.33.0",

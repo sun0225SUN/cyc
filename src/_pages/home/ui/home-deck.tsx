@@ -5,8 +5,8 @@ import type { Activity } from '@/entities/activity'
 import { mapboxToken } from '@/shared/config/mapbox'
 import {
   MapCameraBar,
-  type RideMapCamera,
   RideMap,
+  type RideMapCamera,
   Starfield,
 } from '@/widgets/ride-map'
 import { PageSwitch } from './page-switch'
@@ -98,7 +98,10 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
         ref={scrollerRef}
         className='relative z-10 h-svh snap-y snap-mandatory scrollbar-none overflow-y-auto overscroll-y-none scroll-smooth [&::-webkit-scrollbar]:hidden'
       >
-        <section className='relative h-svh snap-start snap-always'>
+        <section
+          id='ride-map'
+          className='relative h-svh snap-start snap-always'
+        >
           <RideMap
             activities={activities}
             locale={locale}

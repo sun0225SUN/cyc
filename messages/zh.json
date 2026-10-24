@@ -7,6 +7,27 @@
   "site": {
     "name": "cyc"
   },
+  "commandMenu": {
+    "placeholder": "搜索命令…",
+    "empty": "没有匹配的结果",
+    "suggestions": "建议",
+    "commands": "命令",
+    "command": "命令",
+    "page": "页面",
+    "link": "链接",
+    "toggleLight": "切换到浅色模式",
+    "toggleDark": "切换到深色模式",
+    "switchTo": "切换到 {language}",
+    "map": "地图",
+    "heatmap": "热力图",
+    "activities": "活动",
+    "tracks": "轨迹",
+    "summary": "汇总",
+    "github": "GitHub",
+    "open": "打开",
+    "actions": "操作",
+    "close": "关闭命令菜单"
+  },
   "activityNames": {
     "lateNight": "凌晨骑行",
     "earlyMorning": "早晨骑行",

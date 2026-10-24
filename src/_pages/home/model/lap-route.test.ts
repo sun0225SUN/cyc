@@ -1,7 +1,13 @@
 import { encode } from '@mapbox/polyline'
 import { expect, test } from 'vitest'
 import type { RideLap } from '@/entities/activity'
-import { lapCoordinates, lapDistanceWindow } from './lap-route'
+import {
+  coordinatesBounds,
+  lapCoordinates,
+  lapDistanceWindow,
+  lapPaths,
+  routeCoordinates,
+} from './lap-route'
 
 const first: [number, number] = [30, 120]
 const middle: [number, number] = [30.01, 120]
@@ -38,4 +44,22 @@ test('slices the polyline to the selected lap', () => {
   expect(firstLap.length).toBeGreaterThanOrEqual(2)
   expect(firstLap[0]?.[0]).toBeCloseTo(first[1], 3)
   expect(secondLap[0]?.[1]).toBeGreaterThan(firstLap[0]?.[1] ?? 0)
+})
+
+test('splits the polyline into one path per lap', () => {
+  const laps = [lap(1, 1000), lap(2, 2000)]
+  const paths = lapPaths(polyline, laps)
+  expect(paths.map((path) => path.index)).toEqual([1, 2])
+  expect(paths[0]?.coordinates.length).toBeGreaterThanOrEqual(2)
+  expect(paths[1]?.coordinates[0]?.[1]).toBeGreaterThan(
+    paths[0]?.coordinates[0]?.[1] ?? 0,
+  )
+})
+
+test('frames only the selected lap instead of the whole route', () => {
+  const laps = [lap(1, 1000), lap(2, 2000)]
+  const lapBounds = coordinatesBounds(lapCoordinates(polyline, laps, 1))
+  const routeBounds = coordinatesBounds(routeCoordinates(polyline))
+  expect(lapBounds).not.toEqual(routeBounds)
+  expect(lapBounds?.[1][1] ?? 0).toBeLessThan(routeBounds?.[1][1] ?? 0)
 })

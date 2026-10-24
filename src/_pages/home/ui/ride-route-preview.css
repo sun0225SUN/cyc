@@ -34,20 +34,6 @@
   color: var(--color-ride-on);
 }
 
-.ride-marker-lap.is-dot {
-  width: 10px;
-  height: 10px;
-  color: transparent;
-}
-
-.ride-marker-lap.is-selected {
-  width: 26px;
-  height: 26px;
-  box-shadow:
-    0 0 0 3px color-mix(in oklab, var(--color-ride) 45%, transparent),
-    0 4px 14px rgb(0 0 0 / 22%);
-}
-
 .dark .ride-marker-end {
   background: #f4f4f5;
   color: #111111;

@@ -5,17 +5,14 @@ import mapboxgl from 'mapbox-gl'
 import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  type Activity,
-  activitiesToGeoJson,
-  type RideLap,
-} from '@/entities/activity'
+import type { Activity, LngLatBounds, RideLap } from '@/entities/activity'
 import { type RideMapStyleId, rideMapStyle } from '@/shared/config/mapbox'
 import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
 import {
   coordinatesBounds,
-  lapCoordinates,
+  type LapPath,
   routeCoordinates,
+  splitLapPaths,
 } from '../model/lap-route'
 import { RideMapLayers } from './ride-map-layers'
 import './ride-route-preview.css'
@@ -24,11 +21,29 @@ const MAP_CONTROL =
   'grid size-11 cursor-pointer place-items-center transition-colors hover:bg-white active:bg-white dark:hover:bg-black/85 dark:active:bg-black/85'
 const MAP_CONTROL_CHIP = `${MAP_CONTROL} rounded-2xl bg-white/85 shadow-lg backdrop-blur-md dark:bg-black/70`
 
-const SOURCE_ID = 'detail-ride'
-const LAYER_ID = 'detail-ride'
-const LAP_SOURCE_ID = 'detail-ride-lap'
-const LAP_LAYER_ID = 'detail-ride-lap'
-const FIT = { padding: 48, maxZoom: 16 } as const
+const SOURCE_ID = 'detail-laps'
+const LAYER_ID = 'detail-laps'
+const CASING_ID = 'detail-laps-casing'
+
+function styleUsesSlot(id: RideMapStyleId) {
+  return id === 'standard' || id === 'standardSatellite'
+}
+
+const FIT = {
+  padding: { top: 40, right: 72, bottom: 40, left: 40 },
+  maxZoom: 18,
+} as const
+
+function fitMap(
+  map: mapboxgl.Map,
+  bounds: LngLatBounds | null | undefined,
+  duration: number,
+) {
+  if (!bounds) return
+  const { clientWidth, clientHeight } = map.getContainer()
+  if (clientWidth < 32 || clientHeight < 32) return
+  map.fitBounds(bounds, { ...FIT, duration })
+}
 
 type RideRoutePreviewProps = {
   activity: Activity
@@ -42,54 +57,115 @@ function motionDuration() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450
 }
 
-function lineLayer(
-  id: string,
-  source: string,
-  color: string,
-  width: number,
-  opacity: number,
-): mapboxgl.LineLayerSpecification {
+function lapCollection(
+  paths: LapPath[],
+): GeoJSON.FeatureCollection<GeoJSON.LineString, { index: number }> {
   return {
-    id,
-    type: 'line',
-    source,
-    layout: { 'line-join': 'round', 'line-cap': 'round' },
-    paint: {
-      'line-color': color,
-      'line-width': width,
-      'line-opacity': opacity,
-    },
+    type: 'FeatureCollection',
+    features: paths.map((path) => ({
+      type: 'Feature',
+      id: path.index,
+      properties: { index: path.index },
+      geometry: { type: 'LineString', coordinates: path.coordinates },
+    })),
   }
 }
 
-function setLine(
-  map: mapboxgl.Map,
-  sourceId: string,
-  layerId: string,
-  coordinates: [number, number][],
-  color: string,
-  width: number,
-  opacity: number,
-) {
-  if (!map.isStyleLoaded() || coordinates.length < 2) return
-  const data: GeoJSON.Feature<GeoJSON.LineString> = {
-    type: 'Feature',
-    properties: {},
-    geometry: { type: 'LineString', coordinates },
+function selectedExpr(
+  selected: number | null,
+  on: number,
+  off: number,
+): number | mapboxgl.ExpressionSpecification {
+  if (selected == null) return off
+  return ['case', ['==', ['get', 'index'], selected], on, off]
+}
+
+function styleReady(map: mapboxgl.Map) {
+  try {
+    return Boolean(map.getStyle())
+  } catch {
+    return false
   }
-  const source = map.getSource(sourceId)
+}
+
+function syncLapSource(map: mapboxgl.Map, paths: LapPath[]) {
+  if (!styleReady(map) || paths.length === 0) return
+  const data = lapCollection(paths)
+  const source = map.getSource(SOURCE_ID)
   if (source && source.type === 'geojson') {
     source.setData(data)
-  } else {
-    map.addSource(sourceId, { type: 'geojson', data })
-  }
-  if (map.getLayer(layerId)) {
-    map.setPaintProperty(layerId, 'line-color', color)
-    map.setPaintProperty(layerId, 'line-width', width)
-    map.setPaintProperty(layerId, 'line-opacity', opacity)
     return
   }
-  map.addLayer(lineLayer(layerId, sourceId, color, width, opacity))
+  map.addSource(SOURCE_ID, { type: 'geojson', data, promoteId: 'index' })
+}
+
+function styleLaps(
+  map: mapboxgl.Map,
+  selected: number | null,
+  color: string,
+  slotted: boolean,
+) {
+  if (!styleReady(map) || !map.getSource(SOURCE_ID)) return
+  const slot = slotted ? ('top' as const) : undefined
+  const line = {
+    type: 'line' as const,
+    source: SOURCE_ID,
+    ...(slot ? { slot } : {}),
+    layout: { 'line-join': 'round' as const, 'line-cap': 'round' as const },
+  }
+  if (!map.getLayer(CASING_ID)) {
+    map.addLayer({
+      ...line,
+      id: CASING_ID,
+      paint: {
+        'line-color': color,
+        'line-width': 11,
+        'line-opacity': 0.28,
+      },
+    })
+  }
+  if (!map.getLayer(LAYER_ID)) {
+    map.addLayer({
+      ...line,
+      id: LAYER_ID,
+      paint: {
+        'line-color': color,
+        'line-width': 4,
+        'line-opacity': 0.95,
+      },
+    })
+  }
+  map.setFilter(
+    CASING_ID,
+    selected == null
+      ? ['==', ['get', 'index'], -1]
+      : ['==', ['get', 'index'], selected],
+  )
+  map.setPaintProperty(LAYER_ID, 'line-color', color)
+  map.setPaintProperty(
+    LAYER_ID,
+    'line-width',
+    selectedExpr(selected, 6.5, selected == null ? 4 : 2),
+  )
+  map.setPaintProperty(
+    LAYER_ID,
+    'line-opacity',
+    selectedExpr(selected, 1, selected == null ? 0.95 : 0.18),
+  )
+  map.setLayoutProperty(LAYER_ID, 'line-sort-key', selectedExpr(selected, 2, 0))
+  map.setPaintProperty(CASING_ID, 'line-color', color)
+  map.moveLayer(LAYER_ID)
+}
+
+function paintLaps(
+  map: mapboxgl.Map,
+  paths: LapPath[],
+  selected: number | null,
+  color: string,
+  slotted: boolean,
+) {
+  syncLapSource(map, paths)
+  styleLaps(map, selected, color, slotted)
 }
 
 export function RideRoutePreview({
@@ -114,23 +190,30 @@ export function RideRoutePreview({
   const [showLaps, setShowLaps] = useState(true)
   const [showEnds, setShowEnds] = useState(true)
   const [layersOpen, setLayersOpen] = useState(false)
-  const mapData = useMemo(() => activitiesToGeoJson([activity]), [activity])
-  const selectedPath = useMemo(
-    () =>
-      selectedLap == null
-        ? []
-        : lapCoordinates(activity.summary_polyline, laps, selectedLap),
-    [activity.summary_polyline, laps, selectedLap],
+  const route = useMemo(
+    () => routeCoordinates(activity.summary_polyline),
+    [activity.summary_polyline],
   )
+  const paths = useMemo(() => splitLapPaths(route, laps), [laps, route])
+  const selectedPath = useMemo(() => {
+    if (selectedLap == null) return null
+    return paths.find((path) => path.index === selectedLap)?.coordinates ?? null
+  }, [paths, selectedLap])
   const focus = useMemo(
     () =>
-      selectedPath.length >= 2
+      selectedPath && selectedPath.length >= 2
         ? coordinatesBounds(selectedPath)
-        : mapData.bounds,
-    [mapData.bounds, selectedPath],
+        : coordinatesBounds(route),
+    [route, selectedPath],
   )
-  const mapDataRef = useRef({ mapData, selectedPath, focus, selectedLap })
-  mapDataRef.current = { mapData, selectedPath, focus, selectedLap }
+  const slot = styleUsesSlot(styleId)
+  const mapDataRef = useRef({
+    paths,
+    focus,
+    selectedLap,
+    slot,
+  })
+  mapDataRef.current = { paths, focus, selectedLap, slot }
   const labels = useMemo(
     () => ({
       start: tDetail('start'),
@@ -139,20 +222,24 @@ export function RideRoutePreview({
     }),
     [tDetail],
   )
+  const selectedLapRef = useRef(selectedLap)
+  selectedLapRef.current = selectedLap
   const markerStateRef = useRef({
-    activity,
     laps,
     labels,
-    selectedLap,
+    paths,
+    route,
+    selectedLapRef,
     onSelectLap,
     showLaps,
     showEnds,
   })
   markerStateRef.current = {
-    activity,
     laps,
     labels,
-    selectedLap,
+    paths,
+    route,
+    selectedLapRef,
     onSelectLap,
     showLaps,
     showEnds,
@@ -161,9 +248,7 @@ export function RideRoutePreview({
   const appearance = dark ? 'dark' : 'light'
   const darkRef = useRef(dark)
   darkRef.current = dark
-  const center = routeCoordinates(activity.summary_polyline)[0] ?? [
-    120.15, 30.28,
-  ]
+  const center = route[0] ?? [120.15, 30.28]
 
   useEffect(() => {
     const container = containerRef.current
@@ -188,14 +273,32 @@ export function RideRoutePreview({
 
     const draw = () => {
       const next = mapDataRef.current
-      const markers = markerStateRef.current
-      applyFocus(map, next.mapData, next.selectedPath, darkRef.current)
-      paintMarkers(map, markersRef, markers)
+      paintLaps(
+        map,
+        next.paths,
+        next.selectedLap,
+        accentColor(darkRef.current ? 'dark' : 'light'),
+        next.slot,
+      )
+      paintMarkers(map, markersRef, markerStateRef.current)
+      fitMap(map, next.focus, 0)
     }
 
     map.on('style.load', draw)
     map.on('load', draw)
-    const resize = new ResizeObserver(() => map.resize())
+    if (styleReady(map)) draw()
+    let width = 0
+    let height = 0
+    const resize = new ResizeObserver(() => {
+      const nextWidth = container.clientWidth
+      const nextHeight = container.clientHeight
+      if (nextWidth === width && nextHeight === height) return
+      const first = width < 32 || height < 32
+      width = nextWidth
+      height = nextHeight
+      map.resize()
+      if (first) fitMap(map, mapDataRef.current.focus, 0)
+    })
     resize.observe(container)
 
     return () => {
@@ -214,9 +317,7 @@ export function RideRoutePreview({
     appliedStyleRef.current = key
     map.setStyle(
       rideMapStyle(styleId, appearance, {
-        route:
-          mapDataRef.current.mapData.geojson.features[0]?.geometry
-            .coordinates ?? [],
+        route: [],
         color: accentColor(appearance),
       }) as string | mapboxgl.StyleSpecification,
     )
@@ -224,32 +325,39 @@ export function RideRoutePreview({
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map?.isStyleLoaded()) return
-    applyFocus(map, mapData, selectedPath, dark)
-  }, [dark, mapData, selectedPath])
+    if (!map) return
+    syncLapSource(map, paths)
+  }, [paths])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    styleLaps(map, selectedLap, accentColor(appearance), slot)
+  }, [appearance, selectedLap, slot])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    const frame = requestAnimationFrame(() => {
+      fitMap(map, focus, motionDuration())
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [focus])
 
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     paintMarkers(map, markersRef, {
-      activity,
       laps,
       labels,
-      selectedLap,
+      paths,
+      route,
+      selectedLapRef,
       onSelectLap,
       showLaps,
       showEnds,
     })
-  }, [activity, labels, laps, onSelectLap, selectedLap, showEnds, showLaps])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map?.isStyleLoaded() || !focus) return
-    map.fitBounds(focus, {
-      ...FIT,
-      duration: motionDuration(),
-    })
-  }, [focus])
+  }, [labels, laps, onSelectLap, paths, route, showEnds, showLaps])
 
   useEffect(() => {
     const sync = () => setFullscreen(isFullscreen(frameRef.current))
@@ -352,113 +460,70 @@ export function RideRoutePreview({
   )
 }
 
-function applyFocus(
-  map: mapboxgl.Map,
-  mapData: ReturnType<typeof activitiesToGeoJson>,
-  selectedPath: [number, number][],
-  dark: boolean,
-) {
-  const color = accentColor(dark ? 'dark' : 'light')
-  const full = mapData.geojson.features[0]?.geometry.coordinates ?? []
-  const focused = selectedPath.length >= 2
-  setLine(
-    map,
-    SOURCE_ID,
-    LAYER_ID,
-    full,
-    color,
-    focused ? 3 : 4,
-    focused ? 0.28 : 0.95,
-  )
-  if (focused) {
-    setLine(map, LAP_SOURCE_ID, LAP_LAYER_ID, selectedPath, color, 5, 1)
-    return
-  }
-  if (map.getLayer(LAP_LAYER_ID)) map.removeLayer(LAP_LAYER_ID)
-  if (map.getSource(LAP_SOURCE_ID)) map.removeSource(LAP_SOURCE_ID)
+type MarkerState = {
+  laps: RideLap[]
+  labels: { start: string; end: string; lap: string }
+  paths: LapPath[]
+  route: [number, number][]
+  selectedLapRef: { current: number | null }
+  onSelectLap?: (index: number | null) => void
+  showLaps: boolean
+  showEnds: boolean
 }
 
 function paintMarkers(
   map: mapboxgl.Map,
   markersRef: { current: mapboxgl.Marker[] },
-  state: {
-    activity: Activity
-    laps: RideLap[]
-    labels: { start: string; end: string; lap: string }
-    selectedLap: number | null
-    onSelectLap?: (index: number | null) => void
-    showLaps: boolean
-    showEnds: boolean
-  },
+  state: MarkerState,
 ) {
   clearMarkers(markersRef.current)
-  markersRef.current = placeMarkers(
-    map,
-    state.activity,
-    state.laps,
-    state.labels,
-    state.selectedLap,
-    state.onSelectLap,
-    state.showLaps,
-    state.showEnds,
-  )
+  markersRef.current = placeMarkers(map, state)
 }
 
-function placeMarkers(
-  map: mapboxgl.Map,
-  activity: Activity,
-  laps: RideLap[],
-  labels: { start: string; end: string; lap: string },
-  selectedLap: number | null,
-  onSelectLap: ((index: number | null) => void) | undefined,
-  showLaps: boolean,
-  showEnds: boolean,
-) {
+function placeMarkers(map: mapboxgl.Map, state: MarkerState) {
   const markers: mapboxgl.Marker[] = []
-  const route = routeCoordinates(activity.summary_polyline)
-  const start = route[0]
-  const end = route.at(-1)
-  if (showEnds && start) {
+  const start = state.route[0]
+  const end = state.route.at(-1)
+  if (state.showEnds && start) {
     markers.push(
-      marker(map, start, 'ride-marker ride-marker-start', labels.start),
+      marker(map, start, 'ride-marker ride-marker-start', state.labels.start),
     )
   }
-  if (showEnds && end) {
-    markers.push(marker(map, end, 'ride-marker ride-marker-end', labels.end))
+  if (state.showEnds && end) {
+    markers.push(
+      marker(map, end, 'ride-marker ride-marker-end', state.labels.end),
+    )
   }
-  if (!showLaps) return markers
-  for (const lap of laps) {
-    const at = lapPoint(activity.summary_polyline, laps, lap)
+  if (!state.showLaps) return markers
+  for (const lap of state.laps) {
+    const at = lapMarkerPoint(lap, state.paths)
     if (!at) continue
     const item = marker(
       map,
       at,
-      [
-        'ride-marker ride-marker-lap',
-        lap.index === selectedLap ? 'is-selected' : '',
-      ]
-        .filter(Boolean)
-        .join(' '),
+      'ride-marker ride-marker-lap',
       String(lap.index),
-      `${labels.lap} ${lap.index}`,
+      `${state.labels.lap} ${lap.index}`,
     )
     item.getElement().style.cursor = 'pointer'
     item.getElement().addEventListener('click', (event) => {
       event.stopPropagation()
-      onSelectLap?.(lap.index === selectedLap ? null : lap.index)
+      const selected = state.selectedLapRef.current
+      state.onSelectLap?.(lap.index === selected ? null : lap.index)
     })
     markers.push(item)
   }
   return markers
 }
 
-function lapPoint(
-  polyline: string,
-  laps: RideLap[],
+function lapMarkerPoint(
   lap: RideLap,
+  paths: LapPath[],
 ): [number, number] | null {
   if (lap.lng != null && lap.lat != null) return [lap.lng, lap.lat]
-  return lapCoordinates(polyline, laps, lap.index).at(-1) ?? null
+  return (
+    paths.find((path) => path.index === lap.index)?.coordinates.at(-1) ?? null
+  )
 }
 
 function marker(

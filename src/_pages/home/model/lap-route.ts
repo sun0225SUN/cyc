@@ -3,6 +3,11 @@ import type { LngLatBounds, RideLap } from '@/entities/activity'
 
 const EARTH = 6_371_000
 
+export type LapPath = {
+  index: number
+  coordinates: [number, number][]
+}
+
 export function routeCoordinates(polyline: string): [number, number][] {
   if (!polyline) return []
   return decode(polyline).map(
@@ -10,23 +15,45 @@ export function routeCoordinates(polyline: string): [number, number][] {
   )
 }
 
+export function lapPaths(polyline: string, laps: RideLap[]) {
+  return splitLapPaths(routeCoordinates(polyline), laps)
+}
+
+export function splitLapPaths(
+  coordinates: [number, number][],
+  laps: RideLap[],
+): LapPath[] {
+  if (coordinates.length < 2) return []
+  if (laps.length === 0) return [{ index: 0, coordinates }]
+  const lengths = cumulativeMeters(coordinates)
+  const total = lengths[lengths.length - 1] ?? 0
+  const ordered = [...laps].sort((left, right) => left.index - right.index)
+  const lapTotal = ordered.reduce((sum, lap) => sum + (lap.distance ?? 0), 0)
+  const scale = lapTotal > 0 ? total / lapTotal : 1
+  const paths: LapPath[] = []
+  let start = 0
+  for (const lap of ordered) {
+    const end = start + (lap.distance ?? 0)
+    const slice = sliceByDistance(
+      coordinates,
+      lengths,
+      start * scale,
+      end * scale,
+    )
+    if (slice.length >= 2) paths.push({ index: lap.index, coordinates: slice })
+    start = end
+  }
+  return paths
+}
+
 export function lapCoordinates(
   polyline: string,
   laps: RideLap[],
   index: number,
 ): [number, number][] {
-  const coordinates = routeCoordinates(polyline)
-  const window = lapDistanceWindow(laps, index)
-  if (coordinates.length < 2 || !window) return []
-  const lengths = cumulativeMeters(coordinates)
-  const total = lengths[lengths.length - 1] ?? 0
-  const lapTotal = laps.reduce((sum, lap) => sum + (lap.distance ?? 0), 0)
-  const scale = lapTotal > 0 ? total / lapTotal : 1
-  return sliceByDistance(
-    coordinates,
-    lengths,
-    window.start * scale,
-    window.end * scale,
+  return (
+    lapPaths(polyline, laps).find((path) => path.index === index)
+      ?.coordinates ?? []
   )
 }
 

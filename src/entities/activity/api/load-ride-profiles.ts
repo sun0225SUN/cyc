@@ -1,19 +1,23 @@
+'use server'
+
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { cacheLife } from 'next/cache'
-import type { RideDetailData, RideSpeedProfile } from '../model/ride-detail'
+import type { RideDetailData, RideProfile } from '../model/ride-detail'
 
 const SAMPLES = 48
 
-export async function loadRideSpeedProfiles(): Promise<
-  Record<number, RideSpeedProfile>
-> {
+export async function loadRideProfiles(
+  ids?: number[],
+): Promise<Record<number, RideProfile>> {
   'use cache'
   cacheLife('max')
 
   const dir = path.join(process.cwd(), 'data', 'rides')
-  const files = await readdir(dir)
-  const next: Record<number, RideSpeedProfile> = {}
+  const files = ids
+    ? ids.filter((id) => Number.isInteger(id)).map((id) => `${id}.json`)
+    : (await readdir(dir)).filter((file) => file.endsWith('.json'))
+  const next: Record<number, RideProfile> = {}
   await Promise.all(
     files.map(async (file) => {
       if (!file.endsWith('.json')) return

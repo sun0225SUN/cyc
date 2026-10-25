@@ -18,6 +18,25 @@ export type RideMapData = {
   bounds: LngLatBounds | null
 }
 
+export function activityToFeature(
+  activity: Activity,
+): RideFeatureCollection['features'][number] | null {
+  if (!activity.summary_polyline) return null
+  const coordinates = decode(activity.summary_polyline).map(
+    ([latitude, longitude]) => [longitude, latitude] as [number, number],
+  )
+  if (coordinates.length < 2) return null
+  return {
+    type: 'Feature',
+    id: activity.run_id,
+    properties: {
+      id: activity.run_id,
+      speed: activity.average_speed * 3.6,
+    },
+    geometry: { type: 'LineString', coordinates },
+  }
+}
+
 export function activitiesToGeoJson(activities: Activity[]): RideMapData {
   const features: RideFeatureCollection['features'] = []
   let west = Number.POSITIVE_INFINITY
@@ -26,26 +45,15 @@ export function activitiesToGeoJson(activities: Activity[]): RideMapData {
   let north = Number.NEGATIVE_INFINITY
 
   for (const activity of activities) {
-    if (!activity.summary_polyline) continue
-    const coordinates = decode(activity.summary_polyline).map(
-      ([latitude, longitude]) => [longitude, latitude] as [number, number],
-    )
-    if (coordinates.length < 2) continue
-    for (const [longitude, latitude] of coordinates) {
+    const feature = activityToFeature(activity)
+    if (!feature) continue
+    for (const [longitude, latitude] of feature.geometry.coordinates) {
       west = Math.min(west, longitude)
       south = Math.min(south, latitude)
       east = Math.max(east, longitude)
       north = Math.max(north, latitude)
     }
-    features.push({
-      type: 'Feature',
-      id: activity.run_id,
-      properties: {
-        id: activity.run_id,
-        speed: activity.average_speed * 3.6,
-      },
-      geometry: { type: 'LineString', coordinates },
-    })
+    features.push(feature)
   }
 
   return {

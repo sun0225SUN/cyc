@@ -1,4 +1,5 @@
 export type { Activity } from './model/activity'
+export { activitiesNewestFirst } from './model/activity-order'
 export {
   type ActivityNameKey,
   activityNameKey,
@@ -7,11 +8,12 @@ export {
 export type {
   RideDetailData,
   RideLap,
-  RideSpeedProfile,
+  RideProfile,
   RideStreams,
 } from './model/ride-detail'
 export {
   activitiesToGeoJson,
+  activityToFeature,
   type LngLatBounds,
   type RideFeatureCollection,
   type RideMapData,

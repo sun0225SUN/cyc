@@ -6,7 +6,7 @@ import type { RideMapStyleId } from '@/shared/config/mapbox'
 import { MapStylePicker } from './map-style-picker'
 import { LayerSwitch } from './ride-map-layers'
 
-type MapSpeedLayersDialogProps = {
+type MapLayersDialogProps = {
   token: string
   center: [number, number]
   styleId: RideMapStyleId
@@ -16,7 +16,7 @@ type MapSpeedLayersDialogProps = {
   onClose: () => void
 }
 
-export function MapSpeedLayersDialog({
+export function MapLayersDialog({
   token,
   center,
   styleId,
@@ -24,7 +24,7 @@ export function MapSpeedLayersDialog({
   colorBySpeed,
   onColorBySpeed,
   onClose,
-}: MapSpeedLayersDialogProps) {
+}: MapLayersDialogProps) {
   const t = useTranslations('map')
 
   useEffect(() => {

@@ -78,7 +78,7 @@ export type RideDetailData = {
   streams: RideStreams
 }
 
-export type RideSpeedProfile = {
+export type RideProfile = {
   distance: number[]
   speed: number[]
 }

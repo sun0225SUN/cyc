@@ -10,7 +10,8 @@ import {
   useRef,
   useState,
 } from 'react'
-import type { Activity, RideSpeedProfile } from '@/entities/activity'
+import type { Activity, RideProfile } from '@/entities/activity'
+import { loadRideProfiles } from '@/entities/activity/api/load-ride-profiles'
 import { mapboxToken, type RideMapStyleId } from '@/shared/config/mapbox'
 import { appearanceFromDocument } from '@/shared/config/theme'
 import {
@@ -21,23 +22,28 @@ import {
   Starfield,
 } from '@/widgets/ride-map'
 import { routeCoordinates } from '../model/lap-route'
+import {
+  nextRideBatchIds,
+  RIDE_MAP_BATCH,
+  rideIdsNewestFirst,
+} from '../model/ride-batch'
 import { speedLineStops } from '../model/speed-route'
 import { useHomeQuery } from '../model/use-home-query'
-import { MapSpeedLayersDialog } from './map-speed-layers-dialog'
+import { MapLayersDialog } from './map-layers-dialog'
 import { PageSwitch } from './page-switch'
 import { RideDetail } from './ride-detail'
 import { RideExplorer } from './ride-explorer'
 
 type HomeDeckProps = {
   activities: Activity[]
-  speedProfiles: Record<number, RideSpeedProfile>
+  rideProfiles: Record<number, RideProfile>
   locale: string
   brand: ReactNode
 }
 
 export function HomeDeck({
   activities,
-  speedProfiles,
+  rideProfiles: initialRideProfiles,
   locale,
   brand,
 }: HomeDeckProps) {
@@ -49,6 +55,11 @@ export function HomeDeck({
   const [styleId, setStyleId] = useState<RideMapStyleId>(() =>
     appearanceFromDocument() === 'dark' ? 'dark' : 'light',
   )
+  const [rideProfiles, setRideProfiles] = useState(initialRideProfiles)
+  const rideIds = useMemo(() => rideIdsNewestFirst(activities), [activities])
+  const [rideCursor, setRideCursor] = useState(
+    Math.min(RIDE_MAP_BATCH, rideIds.length),
+  )
   const tMap = useTranslations('map')
   const token = mapboxToken()
   const mapCenter = useMemo<[number, number]>(() => {
@@ -58,17 +69,36 @@ export function HomeDeck({
     }
     return [120.15, 30.28]
   }, [activities])
+  const activitiesById = useMemo(
+    () => new Map(activities.map((activity) => [activity.run_id, activity])),
+    [activities],
+  )
   const speedLines = useMemo<RideSpeedLine[]>(() => {
-    if (!colorBySpeed) return []
-    return activities.flatMap((activity) => {
-      const profile = speedProfiles[activity.run_id]
-      if (!profile) return []
+    return rideIds.flatMap((id) => {
+      const activity = activitiesById.get(id)
+      const profile = rideProfiles[id]
+      if (!activity || !profile) return []
       const coordinates = routeCoordinates(activity.summary_polyline)
       const stops = speedLineStops(coordinates, profile.distance, profile.speed)
       if (coordinates.length < 2 || stops.length < 4) return []
-      return [{ id: activity.run_id, coordinates, stops }]
+      return [{ id, coordinates, stops }]
     })
-  }, [activities, colorBySpeed, speedProfiles])
+  }, [activitiesById, rideIds, rideProfiles])
+
+  useEffect(() => {
+    if (rideCursor >= rideIds.length) return
+    const ids = nextRideBatchIds(rideIds, rideCursor)
+    if (ids.length === 0) return
+    let cancelled = false
+    void loadRideProfiles(ids).then((next) => {
+      if (cancelled) return
+      setRideProfiles((current) => ({ ...current, ...next }))
+      setRideCursor((current) => current + ids.length)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [rideCursor, rideIds])
   const { query, setQuery } = useHomeQuery()
   const [detail, setDetail] = useState<{
     activity: Activity
@@ -237,7 +267,7 @@ export function HomeDeck({
           ) : null}
         </div>
         {layersOpen ? (
-          <MapSpeedLayersDialog
+          <MapLayersDialog
             token={token}
             center={mapCenter}
             styleId={styleId}

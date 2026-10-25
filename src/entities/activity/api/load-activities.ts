@@ -1,7 +1,9 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { cacheLife } from 'next/cache'
+import { privacyMode } from '@/shared/config/privacy'
 import type { Activity } from '../model/activity'
+import { presentPolyline } from '../model/present-route'
 
 export async function loadActivities(): Promise<Activity[]> {
   'use cache'
@@ -13,5 +15,10 @@ export async function loadActivities(): Promise<Activity[]> {
   if (!Array.isArray(activities)) {
     throw new Error('data/activities.json must be a list of activities')
   }
-  return activities as Activity[]
+  const rides = activities as Activity[]
+  if (!privacyMode) return rides
+  return rides.map((activity) => ({
+    ...activity,
+    summary_polyline: presentPolyline(activity.summary_polyline),
+  }))
 }

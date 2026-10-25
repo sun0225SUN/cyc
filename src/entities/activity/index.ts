@@ -1,10 +1,16 @@
 export type { Activity } from './model/activity'
-export { activitiesNewestFirst } from './model/activity-order'
 export {
   type ActivityNameKey,
   activityNameKey,
   activityNameKeys,
 } from './model/activity-name'
+export { activitiesNewestFirst } from './model/activity-order'
+export {
+  presentLaps,
+  presentPolyline,
+  privacyCut,
+  redactHiddenLapMarkers,
+} from './model/present-route'
 export type {
   RideDetailData,
   RideLap,

@@ -5,13 +5,16 @@ import mapboxgl from 'mapbox-gl'
 import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type {
-  Activity,
-  LngLatBounds,
-  RideLap,
-  RideStreams,
+import {
+  type Activity,
+  type LngLatBounds,
+  presentLaps,
+  privacyCut,
+  type RideLap,
+  type RideStreams,
 } from '@/entities/activity'
 import { type RideMapStyleId, rideMapStyle } from '@/shared/config/mapbox'
+import { privacyMode } from '@/shared/config/privacy'
 import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
 import {
   coordinatesBounds,
@@ -404,15 +407,44 @@ export function RideRoutePreview({
     () => routeCoordinates(activity.summary_polyline),
     [activity.summary_polyline],
   )
-  const paths = useMemo(() => splitLapPaths(route, laps), [laps, route])
+  const cut = useMemo(
+    () => privacyCut(routeDistances(route).at(-1) ?? 0),
+    [route],
+  )
+  const visibleLaps = useMemo(
+    () => presentLaps(laps, cut.originMeters, cut.totalMeters),
+    [cut.originMeters, cut.totalMeters, laps],
+  )
+  const showEndMarkers = !privacyMode && showEnds
+  const paths = useMemo(
+    () => splitLapPaths(route, visibleLaps),
+    [route, visibleLaps],
+  )
   const canColorBySpeed = hasSpeedValues(streams?.speed)
   const track = useMemo(() => lapCollection(paths), [paths])
   const speedStops = useMemo(
     () =>
       canColorBySpeed
-        ? speedLineStops(route, streams?.distance, streams?.speed)
+        ? speedLineStops(
+            route,
+            streams?.distance,
+            streams?.speed,
+            cut.originMeters > 0
+              ? {
+                  origin: cut.originMeters,
+                  routeTotal: cut.totalMeters,
+                }
+              : undefined,
+          )
         : [],
-    [canColorBySpeed, route, streams?.distance, streams?.speed],
+    [
+      canColorBySpeed,
+      cut.originMeters,
+      cut.totalMeters,
+      route,
+      streams?.distance,
+      streams?.speed,
+    ],
   )
   const selectedPath = useMemo(() => {
     if (selectedLap == null) return null
@@ -421,19 +453,21 @@ export function RideRoutePreview({
   const focusStops = useMemo(() => {
     if (!canColorBySpeed || !selectedPath || selectedLap == null) return []
     const total = routeDistances(route).at(-1) ?? 0
-    const origin = lapOrigins(laps, total).get(selectedLap) ?? 0
+    const lapOrigin = lapOrigins(visibleLaps, total).get(selectedLap) ?? 0
     return speedLineStops(selectedPath, streams?.distance, streams?.speed, {
-      origin,
-      routeTotal: total,
+      origin: cut.originMeters + lapOrigin,
+      routeTotal: cut.originMeters > 0 ? cut.totalMeters : total,
     })
   }, [
     canColorBySpeed,
-    laps,
+    cut.originMeters,
+    cut.totalMeters,
     route,
     selectedLap,
     selectedPath,
     streams?.distance,
     streams?.speed,
+    visibleLaps,
   ])
   const focus = useMemo(
     () =>
@@ -478,24 +512,24 @@ export function RideRoutePreview({
   const onSelectLapRef = useRef(onSelectLap)
   onSelectLapRef.current = onSelectLap
   const markerStateRef = useRef({
-    laps,
+    laps: visibleLaps,
     labels,
     paths,
     route,
     selectedLapRef,
     onSelectLap,
     showLaps,
-    showEnds,
+    showEnds: showEndMarkers,
   })
   markerStateRef.current = {
-    laps,
+    laps: visibleLaps,
     labels,
     paths,
     route,
     selectedLapRef,
     onSelectLap,
     showLaps,
-    showEnds,
+    showEnds: showEndMarkers,
   }
   const dark = resolvedTheme === 'dark'
   const appearance = dark ? 'dark' : 'light'
@@ -626,16 +660,16 @@ export function RideRoutePreview({
     const map = mapRef.current
     if (!map) return
     paintMarkers(map, markersRef, {
-      laps,
+      laps: visibleLaps,
       labels,
       paths,
       route,
       selectedLapRef,
       onSelectLap,
       showLaps,
-      showEnds,
+      showEnds: showEndMarkers,
     })
-  }, [labels, laps, onSelectLap, paths, route, showEnds, showLaps])
+  }, [labels, onSelectLap, paths, route, showEndMarkers, showLaps, visibleLaps])
 
   useEffect(() => {
     const sync = () => setFullscreen(isFullscreen(frameRef.current))

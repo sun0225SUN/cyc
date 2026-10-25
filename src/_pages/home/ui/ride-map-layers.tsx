@@ -4,6 +4,7 @@ import { cn } from 'cn'
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 import type { RideMapStyleId } from '@/shared/config/mapbox'
+import { privacyMode } from '@/shared/config/privacy'
 import { MapStylePicker } from './map-style-picker'
 
 const DEFAULT_HEIGHT = 448
@@ -191,12 +192,14 @@ export function RideMapLayers({
             onCheckedChange={onShowLaps}
             event='ride-lap-markers'
           />
-          <LayerSwitch
-            label={t('showStartEnd')}
-            checked={showEnds}
-            onCheckedChange={onShowEnds}
-            event='ride-end-markers'
-          />
+          {privacyMode ? null : (
+            <LayerSwitch
+              label={t('showStartEnd')}
+              checked={showEnds}
+              onCheckedChange={onShowEnds}
+              event='ride-end-markers'
+            />
+          )}
           {onColorBySpeed ? (
             <LayerSwitch
               label={t('colorBySpeed')}

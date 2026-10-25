@@ -10,7 +10,11 @@ import {
   useRef,
   useState,
 } from 'react'
-import type { Activity, RideProfile } from '@/entities/activity'
+import {
+  type Activity,
+  privacyCut,
+  type RideProfile,
+} from '@/entities/activity'
 import { loadRideProfiles } from '@/entities/activity/api/load-ride-profiles'
 import { mapboxToken, type RideMapStyleId } from '@/shared/config/mapbox'
 import { appearanceFromDocument } from '@/shared/config/theme'
@@ -21,7 +25,7 @@ import {
   type RideSpeedLine,
   Starfield,
 } from '@/widgets/ride-map'
-import { routeCoordinates } from '../model/lap-route'
+import { routeCoordinates, routeDistances } from '../model/lap-route'
 import {
   nextRideBatchIds,
   RIDE_MAP_BATCH,
@@ -79,7 +83,18 @@ export function HomeDeck({
       const profile = rideProfiles[id]
       if (!activity || !profile) return []
       const coordinates = routeCoordinates(activity.summary_polyline)
-      const stops = speedLineStops(coordinates, profile.distance, profile.speed)
+      const cut = privacyCut(routeDistances(coordinates).at(-1) ?? 0)
+      const stops = speedLineStops(
+        coordinates,
+        profile.distance,
+        profile.speed,
+        cut.originMeters > 0
+          ? {
+              origin: cut.originMeters,
+              routeTotal: cut.totalMeters,
+            }
+          : undefined,
+      )
       if (coordinates.length < 2 || stops.length < 4) return []
       return [{ id, coordinates, stops }]
     })

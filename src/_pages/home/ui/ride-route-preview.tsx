@@ -3,7 +3,6 @@
 import { Expand, Layers, Shrink, ZoomIn, ZoomOut } from 'lucide-react'
 import mapboxgl from 'mapbox-gl'
 import { useTranslations } from 'next-intl'
-import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   type Activity,
@@ -15,7 +14,12 @@ import {
 } from '@/entities/activity'
 import { type RideMapStyleId, rideMapStyle } from '@/shared/config/mapbox'
 import { privacyMode } from '@/shared/config/privacy'
-import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
+import {
+  accentColor,
+  appearanceFromDocument,
+  themeAccentOn,
+} from '@/shared/config/theme'
+import { useThemeAppearance } from '@/shared/lib/use-theme-appearance'
 import {
   coordinatesBounds,
   type LapPath,
@@ -391,7 +395,7 @@ export function RideRoutePreview({
   const appliedStyleRef = useRef('')
   const t = useTranslations('map')
   const tDetail = useTranslations('rideDetail')
-  const { resolvedTheme } = useTheme()
+  const appearance = useThemeAppearance()
   const [styleId, setStyleId] = useState<RideMapStyleId>(() =>
     appearanceFromDocument() === 'dark' ? 'dark' : 'light',
   )
@@ -401,11 +405,10 @@ export function RideRoutePreview({
   const [layersOpen, setLayersOpen] = useState(false)
 
   useEffect(() => {
-    if (resolvedTheme !== 'light' && resolvedTheme !== 'dark') return
     setStyleId((current) =>
-      current === 'light' || current === 'dark' ? resolvedTheme : current,
+      current === 'light' || current === 'dark' ? appearance : current,
     )
-  }, [resolvedTheme])
+  }, [appearance])
 
   const route = useMemo(
     () => routeCoordinates(activity.summary_polyline),
@@ -425,6 +428,10 @@ export function RideRoutePreview({
     [route, visibleLaps],
   )
   const canColorBySpeed = hasSpeedValues(streams?.speed)
+  const lapMarkerAppearance =
+    canColorBySpeed && colorBySpeed ? 'dark' : appearance
+  const lapMarkerColor = accentColor(lapMarkerAppearance)
+  const lapMarkerTextColor = themeAccentOn[lapMarkerAppearance]
   const track = useMemo(() => lapCollection(paths), [paths])
   const speedStops = useMemo(
     () =>
@@ -521,6 +528,8 @@ export function RideRoutePreview({
     route,
     selectedLapRef,
     onSelectLap,
+    lapMarkerColor,
+    lapMarkerTextColor,
     showLaps,
     showEnds: showEndMarkers,
   })
@@ -531,11 +540,12 @@ export function RideRoutePreview({
     route,
     selectedLapRef,
     onSelectLap,
+    lapMarkerColor,
+    lapMarkerTextColor,
     showLaps,
     showEnds: showEndMarkers,
   }
-  const dark = resolvedTheme === 'dark'
-  const appearance = dark ? 'dark' : 'light'
+  const dark = appearance === 'dark'
   const darkRef = useRef(dark)
   darkRef.current = dark
   const center = route[0] ?? [120.15, 30.28]
@@ -668,10 +678,22 @@ export function RideRoutePreview({
       route,
       selectedLapRef,
       onSelectLap,
+      lapMarkerColor,
+      lapMarkerTextColor,
       showLaps,
       showEnds: showEndMarkers,
     })
-  }, [labels, onSelectLap, paths, route, showEndMarkers, showLaps, visibleLaps])
+  }, [
+    labels,
+    lapMarkerColor,
+    lapMarkerTextColor,
+    onSelectLap,
+    paths,
+    route,
+    showEndMarkers,
+    showLaps,
+    visibleLaps,
+  ])
 
   useEffect(() => {
     const sync = () => setFullscreen(isFullscreen(frameRef.current))
@@ -809,6 +831,8 @@ type MarkerState = {
   route: [number, number][]
   selectedLapRef: { current: number | null }
   onSelectLap?: (index: number | null) => void
+  lapMarkerColor: string
+  lapMarkerTextColor: string
   showLaps: boolean
   showEnds: boolean
 }
@@ -843,8 +867,11 @@ function placeMarkers(map: mapboxgl.Map, state: MarkerState) {
       String(lap.index),
       `${state.labels.lap} ${lap.index}`,
     )
-    item.getElement().style.cursor = 'pointer'
-    item.getElement().addEventListener('click', (event) => {
+    const element = item.getElement()
+    element.style.cursor = 'pointer'
+    element.style.setProperty('--ride-marker-color', state.lapMarkerColor)
+    element.style.setProperty('--ride-marker-on', state.lapMarkerTextColor)
+    element.addEventListener('click', (event) => {
       event.stopPropagation()
       const selected = state.selectedLapRef.current
       state.onSelectLap?.(lap.index === selected ? null : lap.index)

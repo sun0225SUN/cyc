@@ -3,7 +3,6 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl from 'mapbox-gl'
 import { useTranslations } from 'next-intl'
-import { useTheme } from 'next-themes'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import {
   type Activity,
@@ -19,6 +18,7 @@ import {
   rideMapStyle,
 } from '@/shared/config/mapbox'
 import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
+import { useThemeAppearance } from '@/shared/lib/use-theme-appearance'
 import { MapToolbar } from './map-toolbar'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import './mapbox.css'
@@ -64,7 +64,7 @@ export function RideMap({
   speedLines = [],
 }: RideMapProps) {
   const t = useTranslations('map')
-  const { resolvedTheme } = useTheme()
+  const appearance = useThemeAppearance()
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const languageControlRef = useRef<MapboxLanguage | null>(null)
@@ -91,9 +91,6 @@ export function RideMap({
     gen: 0,
     frame: null,
   })
-  const appearance =
-    resolvedTheme === 'dark' || resolvedTheme === 'light' ? resolvedTheme : null
-
   useEffect(() => {
     const container = containerRef.current
     if (!container || !token) return
@@ -268,7 +265,7 @@ export function RideMap({
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !appearance) return
+    if (!map) return
     const key = styleId === 'privacy' ? `privacy:${appearance}` : styleId
     if (styleRef.current === key) return
     styleRef.current = key

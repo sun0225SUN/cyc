@@ -41,8 +41,12 @@
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--color-ride) 92%, black);
-  color: var(--color-ride-on);
+  background: color-mix(
+    in oklab,
+    var(--ride-marker-color, var(--color-ride)) 92%,
+    black
+  );
+  color: var(--ride-marker-on, var(--color-ride-on));
 }
 
 .ride-map-sheet {

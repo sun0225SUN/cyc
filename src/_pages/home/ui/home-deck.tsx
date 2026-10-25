@@ -2,7 +2,6 @@
 
 import { Layers } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useTheme } from 'next-themes'
 import {
   type ReactNode,
   useCallback,
@@ -19,6 +18,7 @@ import {
 import { loadRideProfiles } from '@/entities/activity/api/load-ride-profiles'
 import { mapboxToken, type RideMapStyleId } from '@/shared/config/mapbox'
 import { appearanceFromDocument } from '@/shared/config/theme'
+import { useThemeAppearance } from '@/shared/lib/use-theme-appearance'
 import {
   MapCameraBar,
   RideMap,
@@ -60,7 +60,7 @@ export function HomeDeck({
   const [styleId, setStyleId] = useState<RideMapStyleId>(() =>
     appearanceFromDocument() === 'dark' ? 'dark' : 'light',
   )
-  const { resolvedTheme } = useTheme()
+  const appearance = useThemeAppearance()
   const [rideProfiles, setRideProfiles] = useState(initialRideProfiles)
   const rideIds = useMemo(() => rideIdsNewestFirst(activities), [activities])
   const [rideCursor, setRideCursor] = useState(
@@ -70,11 +70,10 @@ export function HomeDeck({
   const token = mapboxToken()
 
   useEffect(() => {
-    if (resolvedTheme !== 'light' && resolvedTheme !== 'dark') return
     setStyleId((current) =>
-      current === 'light' || current === 'dark' ? resolvedTheme : current,
+      current === 'light' || current === 'dark' ? appearance : current,
     )
-  }, [resolvedTheme])
+  }, [appearance])
 
   const mapCenter = useMemo<[number, number]>(() => {
     for (const activity of activities) {

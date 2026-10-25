@@ -112,6 +112,28 @@
   min-height: 0;
 }
 
+.ride-stream-chart,
+.ride-zone-chart,
+.ride-stream-chart *:focus,
+.ride-zone-chart *:focus,
+.ride-stream-chart *:focus-visible,
+.ride-zone-chart *:focus-visible,
+.ride-stream-chart *:active,
+.ride-zone-chart *:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.ride-stream-chart svg,
+.ride-zone-chart svg,
+.ride-stream-chart .recharts-wrapper,
+.ride-zone-chart .recharts-wrapper,
+.ride-stream-chart .recharts-surface,
+.ride-zone-chart .recharts-surface {
+  border: none;
+  outline: none;
+}
+
 .ride-stream-chart .recharts-cartesian-axis-tick-value,
 .ride-zone-chart .recharts-cartesian-axis-tick-value {
   font-variant-numeric: tabular-nums;

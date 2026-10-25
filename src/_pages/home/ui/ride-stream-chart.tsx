@@ -156,6 +156,7 @@ export function RideStreamChart({
                 >
                   <LineChart
                     data={visiblePoints}
+                    accessibilityLayer={false}
                     syncId='ride-stream'
                     margin={{ left: 0, right: 8, top: 4, bottom: 0 }}
                   >

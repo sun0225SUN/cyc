@@ -192,6 +192,7 @@ export function RideZoneAnalysis({ detail }: RideZoneAnalysisProps) {
           >
             <BarChart
               data={analysis.histogram}
+              accessibilityLayer={false}
               margin={{ top: 18, left: 8, right: 48 }}
             >
               <CartesianGrid vertical={false} syncWithTicks />

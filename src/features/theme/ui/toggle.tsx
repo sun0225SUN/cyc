@@ -43,11 +43,11 @@ export function ThemeToggle({ strokeWidth = 2, className }: ThemeToggleProps) {
       data-umami-event-theme={resolvedTheme === 'light' ? 'dark' : 'light'}
     >
       <Sun
-        className={cn('size-6 dark:hidden', className)}
+        className={cn('hidden size-6 dark:block', className)}
         strokeWidth={strokeWidth}
       />
       <Moon
-        className={cn('hidden size-6 dark:block', className)}
+        className={cn('size-6 dark:hidden', className)}
         strokeWidth={strokeWidth}
       />
     </button>

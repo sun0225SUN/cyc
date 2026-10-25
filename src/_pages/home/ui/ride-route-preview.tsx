@@ -399,6 +399,14 @@ export function RideRoutePreview({
   const [showEnds, setShowEnds] = useState(true)
   const [colorBySpeed, setColorBySpeed] = useState(true)
   const [layersOpen, setLayersOpen] = useState(false)
+
+  useEffect(() => {
+    if (resolvedTheme !== 'light' && resolvedTheme !== 'dark') return
+    setStyleId((current) =>
+      current === 'light' || current === 'dark' ? resolvedTheme : current,
+    )
+  }, [resolvedTheme])
+
   const route = useMemo(
     () => routeCoordinates(activity.summary_polyline),
     [activity.summary_polyline],

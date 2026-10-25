@@ -2,6 +2,7 @@
 
 import { Layers } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useTheme } from 'next-themes'
 import {
   type ReactNode,
   useCallback,
@@ -59,6 +60,7 @@ export function HomeDeck({
   const [styleId, setStyleId] = useState<RideMapStyleId>(() =>
     appearanceFromDocument() === 'dark' ? 'dark' : 'light',
   )
+  const { resolvedTheme } = useTheme()
   const [rideProfiles, setRideProfiles] = useState(initialRideProfiles)
   const rideIds = useMemo(() => rideIdsNewestFirst(activities), [activities])
   const [rideCursor, setRideCursor] = useState(
@@ -66,6 +68,14 @@ export function HomeDeck({
   )
   const tMap = useTranslations('map')
   const token = mapboxToken()
+
+  useEffect(() => {
+    if (resolvedTheme !== 'light' && resolvedTheme !== 'dark') return
+    setStyleId((current) =>
+      current === 'light' || current === 'dark' ? resolvedTheme : current,
+    )
+  }, [resolvedTheme])
+
   const mapCenter = useMemo<[number, number]>(() => {
     for (const activity of activities) {
       const point = routeCoordinates(activity.summary_polyline)[0]

@@ -57,13 +57,13 @@ export function MapToolbar({
                 size={22}
                 strokeWidth={2.25}
                 nonScalingStroke
-                className={cn(isGlobe ? 'block' : 'hidden')}
+                className={cn(isGlobe ? 'hidden' : 'block')}
               />
               <MapIcon
                 size={22}
                 strokeWidth={2.25}
                 nonScalingStroke
-                className={cn(isGlobe ? 'hidden' : 'block')}
+                className={cn(isGlobe ? 'block' : 'hidden')}
               />
             </button>
             <button

@@ -1,21 +1,16 @@
-'use server'
-
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { RideDetailData } from '../model/ride-detail'
-
-export type RideSpeedProfile = {
-  distance: number[]
-  speed: number[]
-}
+import { cacheLife } from 'next/cache'
+import type { RideDetailData, RideSpeedProfile } from '../model/ride-detail'
 
 const SAMPLES = 48
-let cache: Record<number, RideSpeedProfile> | null = null
 
 export async function loadRideSpeedProfiles(): Promise<
   Record<number, RideSpeedProfile>
 > {
-  if (cache) return cache
+  'use cache'
+  cacheLife('max')
+
   const dir = path.join(process.cwd(), 'data', 'rides')
   const files = await readdir(dir)
   const next: Record<number, RideSpeedProfile> = {}
@@ -35,7 +30,6 @@ export async function loadRideSpeedProfiles(): Promise<
       }
     }),
   )
-  cache = next
   return next
 }
 

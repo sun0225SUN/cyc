@@ -7,6 +7,7 @@ export {
 export type {
   RideDetailData,
   RideLap,
+  RideSpeedProfile,
   RideStreams,
 } from './model/ride-detail'
 export {

@@ -10,8 +10,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import type { Activity } from '@/entities/activity'
-import { loadRideSpeedProfiles } from '@/entities/activity/api/load-ride-speeds'
+import type { Activity, RideSpeedProfile } from '@/entities/activity'
 import { mapboxToken, type RideMapStyleId } from '@/shared/config/mapbox'
 import { appearanceFromDocument } from '@/shared/config/theme'
 import {
@@ -31,11 +30,17 @@ import { RideExplorer } from './ride-explorer'
 
 type HomeDeckProps = {
   activities: Activity[]
+  speedProfiles: Record<number, RideSpeedProfile>
   locale: string
   brand: ReactNode
 }
 
-export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
+export function HomeDeck({
+  activities,
+  speedProfiles,
+  locale,
+  brand,
+}: HomeDeckProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
   const [camera, setCamera] = useState<RideMapCamera | null>(null)
@@ -44,9 +49,6 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
   const [styleId, setStyleId] = useState<RideMapStyleId>(() =>
     appearanceFromDocument() === 'dark' ? 'dark' : 'light',
   )
-  const [speedProfiles, setSpeedProfiles] = useState<Awaited<
-    ReturnType<typeof loadRideSpeedProfiles>
-  > | null>(null)
   const tMap = useTranslations('map')
   const token = mapboxToken()
   const mapCenter = useMemo<[number, number]>(() => {
@@ -57,7 +59,7 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
     return [120.15, 30.28]
   }, [activities])
   const speedLines = useMemo<RideSpeedLine[]>(() => {
-    if (!colorBySpeed || !speedProfiles) return []
+    if (!colorBySpeed) return []
     return activities.flatMap((activity) => {
       const profile = speedProfiles[activity.run_id]
       if (!profile) return []
@@ -67,11 +69,6 @@ export function HomeDeck({ activities, locale, brand }: HomeDeckProps) {
       return [{ id: activity.run_id, coordinates, stops }]
     })
   }, [activities, colorBySpeed, speedProfiles])
-
-  useEffect(() => {
-    if (!colorBySpeed || speedProfiles) return
-    void loadRideSpeedProfiles().then(setSpeedProfiles)
-  }, [colorBySpeed, speedProfiles])
   const { query, setQuery } = useHomeQuery()
   const [detail, setDetail] = useState<{
     activity: Activity

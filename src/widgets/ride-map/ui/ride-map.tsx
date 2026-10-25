@@ -150,7 +150,7 @@ export function RideMap({
     map.on('style.load', () => {
       const theme = appearanceFromDocument()
       paintSpace(map, theme)
-      drawRides(map, mapData, accentColor(theme))
+      drawRides(map, mapData, accentColor(theme), colorBySpeedRef.current)
       drawSpeedLines(
         map,
         speedLinesRef.current,
@@ -266,7 +266,7 @@ export function RideMap({
       map.setPaintProperty(
         'rides',
         'line-opacity',
-        colorBySpeed && speedLines.length > 0 ? 0 : 0.9,
+        rideLineOpacity(colorBySpeed),
       )
       map.setPaintProperty(
         'rides',
@@ -356,11 +356,21 @@ function styleReady(map: mapboxgl.Map) {
   }
 }
 
-function drawRides(map: mapboxgl.Map, mapData: RideMapData, color: string) {
+function rideLineOpacity(hide: boolean) {
+  return hide ? 0 : 0.9
+}
+
+function drawRides(
+  map: mapboxgl.Map,
+  mapData: RideMapData,
+  color: string,
+  hide: boolean,
+) {
   const existing = map.getSource('rides')
   if (existing?.type === 'geojson') {
     existing.setData(mapData.geojson)
     map.setPaintProperty('rides', 'line-color', color)
+    map.setPaintProperty('rides', 'line-opacity', rideLineOpacity(hide))
     return
   }
   map.addSource('rides', { type: 'geojson', data: mapData.geojson })
@@ -385,7 +395,7 @@ function drawRides(map: mapboxgl.Map, mapData: RideMapData, color: string) {
         RIDE_LINE,
       ],
       'line-width-transition': { duration: 150 },
-      'line-opacity': 0.9,
+      'line-opacity': rideLineOpacity(hide),
     },
   })
 }

@@ -1,5 +1,8 @@
 import { getLocale, getTranslations } from 'next-intl/server'
-import { loadActivities } from '@/entities/activity/index.server'
+import {
+  loadActivities,
+  loadRideSpeedProfiles,
+} from '@/entities/activity/index.server'
 import { Brand } from '@/shared/ui/logo'
 import { HomeDeck } from './home-deck'
 
@@ -13,7 +16,17 @@ export async function generateMetadata() {
 
 export async function HomePage() {
   const locale = await getLocale()
-  const activities = await loadActivities()
+  const [activities, speedProfiles] = await Promise.all([
+    loadActivities(),
+    loadRideSpeedProfiles(),
+  ])
 
-  return <HomeDeck activities={activities} locale={locale} brand={<Brand />} />
+  return (
+    <HomeDeck
+      activities={activities}
+      speedProfiles={speedProfiles}
+      locale={locale}
+      brand={<Brand />}
+    />
+  )
 }

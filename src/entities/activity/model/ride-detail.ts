@@ -77,3 +77,8 @@ export type RideDetailData = {
   laps: RideLap[]
   streams: RideStreams
 }
+
+export type RideSpeedProfile = {
+  distance: number[]
+  speed: number[]
+}

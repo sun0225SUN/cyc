@@ -11,10 +11,7 @@ import {
 
 const STYLE_LABEL = {
   privacy: 'stylePrivacy',
-  standard: 'styleStandard',
-  standardSatellite: 'styleStandardSatellite',
   streets: 'styleStreets',
-  outdoors: 'styleOutdoors',
   light: 'styleLight',
   dark: 'styleDark',
   satellite: 'styleSatellite',
@@ -54,8 +51,8 @@ export function MapStylePicker({
       <div
         className={
           hidePrivacy
-            ? 'mt-5 grid grid-cols-9 gap-x-1 sm:gap-x-2'
-            : 'mt-5 grid grid-cols-10 gap-x-1 sm:gap-x-2'
+            ? 'mt-5 grid grid-cols-6 gap-x-1 sm:gap-x-2'
+            : 'mt-5 grid grid-cols-7 gap-x-1 sm:gap-x-2'
         }
       >
         {styles.map((id) => {

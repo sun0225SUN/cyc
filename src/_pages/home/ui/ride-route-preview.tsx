@@ -47,10 +47,6 @@ const SPEED_FOCUS_SOURCE = 'detail-speed-focus'
 const SPEED_FOCUS_LAYER = 'detail-speed-focus'
 const HIT_PAD = 10
 
-function styleUsesSlot(id: RideMapStyleId) {
-  return id === 'standard' || id === 'standardSatellite'
-}
-
 const FIT = {
   padding: { top: 40, right: 72, bottom: 40, left: 40 },
   maxZoom: 18,
@@ -476,13 +472,12 @@ export function RideRoutePreview({
         : coordinatesBounds(route),
     [route, selectedPath],
   )
-  const slot = styleUsesSlot(styleId)
   const mapDataRef = useRef({
     track,
     colorBySpeed,
     focus,
     selectedLap,
-    slot,
+    slot: false,
     route,
     speedStops,
     selectedPath,
@@ -493,7 +488,7 @@ export function RideRoutePreview({
     colorBySpeed,
     focus,
     selectedLap,
-    slot,
+    slot: false,
     route,
     speedStops,
     selectedPath,
@@ -631,7 +626,7 @@ export function RideRoutePreview({
       map,
       selectedLap,
       accentColor(appearance),
-      slot,
+      false,
       colorBySpeed,
       speedStops,
       selectedPath ?? [],
@@ -643,7 +638,6 @@ export function RideRoutePreview({
     focusStops,
     selectedLap,
     selectedPath,
-    slot,
     speedStops,
   ])
 

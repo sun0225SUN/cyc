@@ -50,7 +50,7 @@ export function MapLayersDialog({
         role='dialog'
         aria-modal='true'
         aria-labelledby='home-map-layers-title'
-        className='bg-background/95 relative w-full max-w-2xl rounded-3xl border p-6 shadow-2xl backdrop-blur-xl'
+        className='bg-background/95 relative w-full max-w-xl rounded-3xl border p-6 shadow-2xl backdrop-blur-xl'
       >
         <h2 id='home-map-layers-title' className='sr-only'>
           {t('layers')}

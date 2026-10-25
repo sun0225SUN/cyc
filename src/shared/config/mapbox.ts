@@ -7,13 +7,10 @@ export type MapAppearance = keyof typeof mapboxStyles
 
 export const rideMapStyleIds = [
   'privacy',
-  'standard',
   'streets',
-  'outdoors',
   'light',
   'dark',
   'satellite',
-  'standardSatellite',
   'navigationDay',
   'navigationNight',
 ] as const
@@ -21,10 +18,7 @@ export const rideMapStyleIds = [
 export type RideMapStyleId = (typeof rideMapStyleIds)[number]
 
 const rideMapStyleUrls: Record<Exclude<RideMapStyleId, 'privacy'>, string> = {
-  standard: 'mapbox://styles/mapbox/standard',
-  standardSatellite: 'mapbox://styles/mapbox/standard-satellite',
   streets: 'mapbox://styles/mapbox/streets-v12',
-  outdoors: 'mapbox://styles/mapbox/outdoors-v12',
   light: 'mapbox://styles/mapbox/light-v11',
   dark: 'mapbox://styles/mapbox/dark-v11',
   satellite: 'mapbox://styles/mapbox/satellite-v9',

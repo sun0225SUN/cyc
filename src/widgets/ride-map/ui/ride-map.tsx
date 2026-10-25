@@ -67,6 +67,7 @@ export function RideMap({
   const { resolvedTheme } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
+  const languageControlRef = useRef<MapboxLanguage | null>(null)
   const styleRef = useRef<string>('')
   const transitionTimer = useRef<number | null>(null)
   const [mapReady, setMapReady] = useState(false)
@@ -112,7 +113,11 @@ export function RideMap({
       zoom: 1,
       attributionControl: false,
     })
-    map.addControl(new MapboxLanguage({ defaultLanguage: mapLanguage(locale) }))
+    const languageControl = new MapboxLanguage({
+      defaultLanguage: mapLanguage(locale),
+    })
+    languageControlRef.current = languageControl
+    map.addControl(languageControl)
     map.on('dragstart', () => setIsRotating(false))
     map.on('rotate', () => setBearing(map.getBearing()))
     let hoveredRideId: string | number | null = null
@@ -133,7 +138,7 @@ export function RideMap({
     })
     map.on('click', 'rides-hit', (event) => {
       const id = Number(event.features?.[0]?.properties?.id)
-      const activity = activities.find((item) => item.run_id === id)
+      const activity = activitiesRef.current.find((item) => item.run_id === id)
       if (activity) {
         setIsRotating(false)
         // Umami injects window.umami in production.
@@ -167,7 +172,7 @@ export function RideMap({
         map,
         speedDrawRef,
         speedLinesRef.current,
-        styleUsesSlot(styleIdRef.current),
+        false,
         colorBySpeedRef.current,
       )
     })
@@ -181,6 +186,7 @@ export function RideMap({
       cancelDrawQueue(rideDrawRef)
       cancelDrawQueue(speedDrawRef)
       setMapReady(false)
+      languageControlRef.current = null
       map.remove()
       mapRef.current = null
     }
@@ -266,9 +272,24 @@ export function RideMap({
     const key = styleId === 'privacy' ? `privacy:${appearance}` : styleId
     if (styleRef.current === key) return
     styleRef.current = key
+    const languageControl = languageControlRef.current
+    if (languageControl && map.hasControl(languageControl)) {
+      map.removeControl(languageControl)
+    }
     map.setStyle(
       rideMapStyle(styleId, appearance) as string | mapboxgl.StyleSpecification,
     )
+    if (languageControl && styleSupportsLanguage(styleId)) {
+      map.once('style.load', () => {
+        if (
+          mapRef.current === map &&
+          styleSupportsLanguage(styleIdRef.current) &&
+          !map.hasControl(languageControl)
+        ) {
+          map.addControl(languageControl)
+        }
+      })
+    }
   }, [appearance, styleId])
 
   useEffect(() => {
@@ -286,13 +307,7 @@ export function RideMap({
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return
-    queueSpeedLines(
-      map,
-      speedDrawRef,
-      speedLines,
-      styleUsesSlot(styleId),
-      colorBySpeed,
-    )
+    queueSpeedLines(map, speedDrawRef, speedLines, false, colorBySpeed)
     if (map.getLayer('rides')) {
       map.setPaintProperty(
         'rides',
@@ -305,7 +320,7 @@ export function RideMap({
         accentColor(appearance ?? 'dark'),
       )
     }
-  }, [appearance, colorBySpeed, mapReady, speedLines, styleId])
+  }, [appearance, colorBySpeed, mapReady, speedLines])
 
   return (
     <div className='ride-map relative h-svh w-full bg-transparent'>
@@ -375,16 +390,16 @@ function hoverRide(
   if (hover) map.moveLayer(layerId)
 }
 
-function styleUsesSlot(id: RideMapStyleId) {
-  return id === 'standard' || id === 'standardSatellite'
-}
-
 function styleReady(map: mapboxgl.Map) {
   try {
     return Boolean(map.getStyle())
   } catch {
     return false
   }
+}
+
+function styleSupportsLanguage(id: RideMapStyleId) {
+  return id !== 'privacy' && id !== 'satellite'
 }
 
 function rideLineOpacity(hide: boolean) {

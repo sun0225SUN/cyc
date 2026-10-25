@@ -791,14 +791,10 @@ function placeMarkers(map: mapboxgl.Map, state: MarkerState) {
   const start = state.route[0]
   const end = state.route.at(-1)
   if (state.showEnds && start) {
-    markers.push(
-      marker(map, start, 'ride-marker ride-marker-start', state.labels.start),
-    )
+    markers.push(pinMarker(map, start, 'start', state.labels.start))
   }
   if (state.showEnds && end) {
-    markers.push(
-      marker(map, end, 'ride-marker ride-marker-end', state.labels.end),
-    )
+    markers.push(pinMarker(map, end, 'end', state.labels.end))
   }
   if (!state.showLaps) return markers
   for (const lap of state.laps) {
@@ -830,6 +826,23 @@ function lapMarkerPoint(
   return (
     paths.find((path) => path.index === lap.index)?.coordinates.at(-1) ?? null
   )
+}
+
+function pinMarker(
+  map: mapboxgl.Map,
+  lngLat: [number, number],
+  kind: 'start' | 'end',
+  title: string,
+) {
+  const element = document.createElement('div')
+  element.className = `ride-marker ride-marker-pin is-${kind}`
+  element.title = title
+  element.setAttribute('aria-label', title)
+  element.innerHTML =
+    '<svg viewBox="0 0 24 36" aria-hidden="true"><path d="M12 35.4S22.8 22.6 22.8 13.4C22.8 6.6 17.9 1.6 12 1.6S1.2 6.6 1.2 13.4C1.2 22.6 12 35.4 12 35.4Z"/><circle cx="12" cy="13.4" r="5.1" fill="#fff"/></svg>'
+  return new mapboxgl.Marker({ element, anchor: 'bottom' })
+    .setLngLat(lngLat)
+    .addTo(map)
 }
 
 function marker(

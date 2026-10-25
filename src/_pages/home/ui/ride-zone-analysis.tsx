@@ -123,55 +123,76 @@ export function RideZoneAnalysis({ detail }: RideZoneAnalysisProps) {
 
       <div className='mt-4 grid gap-3 lg:grid-cols-2'>
         <div className='flex h-full flex-col rounded-2xl border bg-white/40 p-5 backdrop-blur-xs dark:bg-white/2.5'>
-          <p className='text-muted-foreground text-sm'>
+          <p className='font-medium'>
             {t('zoneList', { unit, label: t(active) })}
           </p>
-          <ol className='mt-5 grid flex-1 grid-cols-[auto_minmax(0,1fr)_auto] content-center items-center gap-x-4 gap-y-4'>
+          <div
+            className='mt-5 flex h-3 w-full overflow-hidden rounded-full bg-black/6 dark:bg-white/10'
+            aria-hidden
+          >
             {analysis.zones.map((zone) => (
-              <li
+              <div
                 key={zone.id}
-                className='col-span-3 grid grid-cols-subgrid items-center text-sm'
-              >
-                <p>
-                  <span className='font-medium'>{t(zone.id)}</span>
-                  <span className='text-muted-foreground ml-2 text-xs tabular-nums'>
-                    {formatRange(zone.min, zone.max)}
-                  </span>
-                </p>
+                className='h-full transition-[width] duration-500 ease-out'
+                style={{
+                  width: `${zone.ratio * 100}%`,
+                  background: ZONE_COLORS[zone.id],
+                }}
+              />
+            ))}
+          </div>
+          <ol className='mt-4 flex flex-1 flex-col justify-center divide-y divide-black/6 dark:divide-white/8'>
+            {analysis.zones.map((zone) => (
+              <li key={zone.id} className='py-3 first:pt-2 last:pb-0'>
+                <div className='flex min-w-0 items-baseline justify-between gap-4'>
+                  <p className='min-w-0 truncate text-sm'>
+                    <span
+                      className='mr-2 inline-block size-2.5 rounded-full'
+                      style={{ background: ZONE_COLORS[zone.id] }}
+                      aria-hidden
+                    />
+                    <span className='font-medium'>{t(zone.id)}</span>
+                    <span className='text-muted-foreground ml-2 text-xs tabular-nums'>
+                      {formatRange(zone.min, zone.max)} {unit}
+                    </span>
+                  </p>
+                  <p className='shrink-0 text-right tabular-nums'>
+                    <span className='text-sm font-semibold'>
+                      {formatZonePercent(zone.ratio)}
+                    </span>
+                    <span className='text-muted-foreground ml-2 text-xs'>
+                      {formatHoursMinutes(zone.seconds)}
+                    </span>
+                  </p>
+                </div>
                 <div
-                  className='h-2.5 min-w-0 overflow-hidden rounded-full bg-black/6 dark:bg-white/10'
+                  className='mt-2 h-1.5 overflow-hidden rounded-full bg-black/6 dark:bg-white/10'
                   aria-hidden
                 >
                   <div
-                    className='h-full rounded-full'
+                    className='h-full rounded-full transition-[width] duration-500 ease-out'
                     style={{
-                      width: `${Math.max(zone.ratio * 100, zone.seconds > 0 ? 2 : 0)}%`,
+                      width: `${zone.ratio * 100}%`,
                       background: ZONE_COLORS[zone.id],
                     }}
                   />
                 </div>
-                <p className='text-right text-xs tabular-nums'>
-                  {formatHoursMinutes(zone.seconds)}
-                  <span className='text-muted-foreground ml-2'>
-                    {(zone.ratio * 100).toFixed(zone.ratio >= 0.1 ? 1 : 2)}%
-                  </span>
-                </p>
               </li>
             ))}
           </ol>
         </div>
 
-        <div className='rounded-2xl border bg-white/40 p-5 backdrop-blur-xs dark:bg-white/2.5'>
+        <div className='flex min-h-96 flex-col rounded-2xl border bg-white/40 p-5 backdrop-blur-xs lg:min-h-0 dark:bg-white/2.5'>
           <p className='text-muted-foreground text-sm'>
             {t('zoneDistribution')}
           </p>
           <ChartContainer
             config={{ seconds: { label: t('time'), color: '#60a5fa' } }}
-            className='ride-zone-chart mt-4 aspect-auto h-56 w-full'
+            className='ride-zone-chart mt-4 aspect-auto w-full flex-1'
           >
             <BarChart
               data={analysis.histogram}
-              margin={{ top: 18, left: 8, right: 8 }}
+              margin={{ top: 18, left: 8, right: 48 }}
             >
               <CartesianGrid vertical={false} syncWithTicks />
               <XAxis
@@ -260,6 +281,11 @@ export function RideZoneAnalysis({ detail }: RideZoneAnalysisProps) {
 function formatRange(min: number, max: number) {
   if (!Number.isFinite(max)) return `≥${min}`
   return `${min}–${max}`
+}
+
+function formatZonePercent(ratio: number) {
+  const percent = ratio * 100
+  return `${percent >= 1 ? Math.round(percent) : percent.toFixed(1)}%`
 }
 
 function hasValues(values?: Array<number | null>) {

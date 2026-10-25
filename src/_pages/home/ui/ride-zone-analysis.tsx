@@ -75,6 +75,7 @@ export function RideZoneAnalysis({ detail }: RideZoneAnalysisProps) {
         SPEED_ZONES,
         1,
         moving,
+        detail.moving_time,
       )
     }
     return analyzeZones(
@@ -83,6 +84,8 @@ export function RideZoneAnalysis({ detail }: RideZoneAnalysisProps) {
       CADENCE_ZONES,
       5,
       moving,
+      detail.moving_time,
+      true,
     )
   }, [active, detail])
 

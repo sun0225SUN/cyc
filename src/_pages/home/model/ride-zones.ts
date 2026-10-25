@@ -44,6 +44,8 @@ export function analyzeZones(
   ranges: ZoneRange[],
   binSize: number,
   streams: ZoneStreams = {},
+  movingTime?: number | null,
+  positiveValuesOnly = false,
 ): { zones: ZoneShare[]; histogram: ZoneHistogramBin[] } {
   const seconds = new Map<ZoneId, number>()
   const bins = new Map<number, number>()
@@ -52,17 +54,12 @@ export function analyzeZones(
   for (let index = 0; index < values.length; index += 1) {
     const value = values[index]
     const start = elapsed[index]
-    if (value == null || start == null) continue
+    if (value == null || start == null || (positiveValuesOnly && value <= 0))
+      continue
     const elapsedDt = sampleElapsed(elapsed, index)
     const moving = isMoving(value, streams.speed?.[index])
     const duration = moving ? sampleMoving(elapsedDt, streams, index) : 0
-    if (!moving) {
-      if (value <= 0 && elapsedDt > 0) {
-        const bin = Math.floor(value / binSize) * binSize
-        bins.set(bin, (bins.get(bin) ?? 0) + elapsedDt)
-      }
-      continue
-    }
+    if (!moving) continue
     if (duration <= 0) continue
     const bin = Math.floor(value / binSize) * binSize
     bins.set(bin, (bins.get(bin) ?? 0) + duration)
@@ -74,13 +71,19 @@ export function analyzeZones(
     if (range) seconds.set(range.id, (seconds.get(range.id) ?? 0) + duration)
   }
 
-  const total = [...seconds.values()].reduce((sum, value) => sum + value, 0)
+  const measuredTotal = [...seconds.values()].reduce(
+    (sum, value) => sum + value,
+    0,
+  )
+  const total =
+    movingTime != null && movingTime > 0 ? movingTime : measuredTotal
+  const scale = measuredTotal > 0 ? total / measuredTotal : 1
   const maxBin = bins.size === 0 ? 0 : Math.max(...bins.keys())
   const histogram: ZoneHistogramBin[] = []
   for (let start = 0; start <= maxBin; start += binSize) {
     histogram.push({
       start,
-      seconds: bins.get(start) ?? 0,
+      seconds: (bins.get(start) ?? 0) * scale,
       zone: zoneForValue(start, ranges),
     })
   }
@@ -88,8 +91,8 @@ export function analyzeZones(
   return {
     zones: ranges.map((range) => ({
       ...range,
-      seconds: seconds.get(range.id) ?? 0,
-      ratio: total > 0 ? (seconds.get(range.id) ?? 0) / total : 0,
+      seconds: (seconds.get(range.id) ?? 0) * scale,
+      ratio: total > 0 ? ((seconds.get(range.id) ?? 0) * scale) / total : 0,
     })),
     histogram,
   }

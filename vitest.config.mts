@@ -8,5 +8,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // One jsdom per worker. Each file still gets its own VM.
+    pool: 'vmThreads',
   },
 })

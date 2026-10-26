@@ -5,10 +5,10 @@
     "zh": "简体中文"
   },
   "site": {
-    "name": "cyc",
-    "title": "cyc · 个人骑行主页",
-    "description": "个人骑行主页：地球仪上的每一次骑行，加上年度热力图、轨迹墙和数据汇总。",
-    "ogImageAlt": "cyc 首页地球仪和骑行轨迹"
+    "name": "cyc.earth",
+    "title": "cyc.earth · 个人骑行主页",
+    "description": "cyc.earth 个人骑行主页：地球仪上的每一次骑行，加上年度热力图、轨迹墙和数据汇总。",
+    "ogImageAlt": "cyc.earth 首页地球仪和骑行轨迹"
   },
   "commandMenu": {
     "placeholder": "搜索命令…",

@@ -1,17 +1,19 @@
 <div align="center">
   <p>
-    <img src="./readme/images/logo.png" alt="cyc" width="100" style="border-radius: 24px;" />
+    <img src="./readme/images/logo.png" alt="cyc.earth" width="100" style="border-radius: 24px;" />
   </p>
   <h2>创建你的个人骑行主页</h2>
 
   [English](./README.md) | 简体中文
 
-  <img alt="GitHub License" src="https://img.shields.io/github/license/sun0225SUN/cyc">
-  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/sun0225SUN/cyc?style=flat">
-  <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/sun0225SUN/cyc?style=flat">
-  <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sun0225SUN/cyc">
-  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/sun0225SUN/cyc">
-  <img alt="Page views" src="https://komarev.com/ghpvc/?username=cyc&label=Views&color=orange&style=flat" />
+  <p><a href="https://cyc.earth">https://cyc.earth</a></p>
+
+  <img alt="GitHub License" src="https://img.shields.io/github/license/sun0225SUN/cyc.earth">
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/sun0225SUN/cyc.earth?style=flat">
+  <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/sun0225SUN/cyc.earth?style=flat">
+  <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sun0225SUN/cyc.earth">
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/sun0225SUN/cyc.earth">
+  <img alt="Page views" src="https://komarev.com/ghpvc/?username=cyc.earth&label=Views&color=orange&style=flat" />
 </div>
 
 ## ✨ 功能
@@ -41,12 +43,15 @@
 
 ### Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sun0225SUN/cyc)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sun0225SUN/cyc.earth)
 
 > [!warning]
 > 运行或部署前，请先配好必要的环境变量。
 
 ```bash
+# 站点地址。Vercel 上可选。
+NEXT_PUBLIC_SITE_URL=https://cyc.earth
+
 # Mapbox。画地球必须有。
 NEXT_PUBLIC_MAPBOX_TOKEN=
 
@@ -67,8 +72,8 @@ NEXT_PUBLIC_UMAMI_WEBSITE_ID=
 1. 克隆仓库
 
 ```bash
-git clone https://github.com/sun0225SUN/cyc.git
-cd cyc
+git clone https://github.com/sun0225SUN/cyc.earth.git
+cd cyc.earth
 ```
 
 2. 在仓库根目录创建 `.env.local`，按 [快速开始](#-快速开始) 填写变量。
@@ -163,4 +168,4 @@ Agent 说明在 [`AGENTS.md`](AGENTS.md) 和 [`docs/agent/`](docs/agent/)。
 
 ## ⭐ Star 历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=sun0225SUN/cyc&type=Date)](https://www.star-history.com/#sun0225SUN/cyc&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=sun0225SUN/cyc.earth&type=Date)](https://www.star-history.com/#sun0225SUN/cyc.earth&Date)

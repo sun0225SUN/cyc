@@ -38,4 +38,4 @@ make refresh
 
 仓库的 `Refresh rides` Action 每天东八区 0 点跑 `make refresh`，若 `data/activities.json` 有变化就提交到 `main`。需要仓库 Secrets：`IGPSPORT_PHONE`、`IGPSPORT_PASSWORD`，以及能推 `main` 的 `ACTION_TOKEN`。也可以在 Actions 里手动触发。
 
-许可证与 cyc 相同，为 GPL-3.0-only。
+许可证与 cyc.earth 相同，为 GPL-3.0-only。

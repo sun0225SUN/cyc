@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "cyc",
+      "name": "cyc.earth",
       "dependencies": {
         "@base-ui/react": "^1.9.0",
         "@mapbox/mapbox-gl-language": "^1.0.1",

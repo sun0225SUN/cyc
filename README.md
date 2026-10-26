@@ -1,17 +1,19 @@
 <div align="center">
   <p>
-    <img src="./readme/images/logo.png" alt="cyc" width="100" style="border-radius: 24px;" />
+    <img src="./readme/images/logo.png" alt="cyc.earth" width="100" style="border-radius: 24px;" />
   </p>
   <h2>Create a personal cycling home page</h2>
 
   English | [简体中文](./README_zh.md)
 
-  <img alt="GitHub License" src="https://img.shields.io/github/license/sun0225SUN/cyc">
-  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/sun0225SUN/cyc?style=flat">
-  <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/sun0225SUN/cyc?style=flat">
-  <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sun0225SUN/cyc">
-  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/sun0225SUN/cyc">
-  <img alt="Page views" src="https://komarev.com/ghpvc/?username=cyc&label=Views&color=orange&style=flat" />
+  <p><a href="https://cyc.earth">https://cyc.earth</a></p>
+
+  <img alt="GitHub License" src="https://img.shields.io/github/license/sun0225SUN/cyc.earth">
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/sun0225SUN/cyc.earth?style=flat">
+  <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/sun0225SUN/cyc.earth?style=flat">
+  <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sun0225SUN/cyc.earth">
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/sun0225SUN/cyc.earth">
+  <img alt="Page views" src="https://komarev.com/ghpvc/?username=cyc.earth&label=Views&color=orange&style=flat" />
 </div>
 
 ## ✨ Features
@@ -41,12 +43,15 @@
 
 ### Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sun0225SUN/cyc)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sun0225SUN/cyc.earth)
 
 > [!warning]
 > Configure the required environment variables before running or deploying the project.
 
 ```bash
+# Public site origin. Optional on Vercel.
+NEXT_PUBLIC_SITE_URL=https://cyc.earth
+
 # Mapbox. Required to draw the globe.
 NEXT_PUBLIC_MAPBOX_TOKEN=
 
@@ -67,8 +72,8 @@ Create a public token at [Mapbox access tokens](https://account.mapbox.com/acces
 1. Clone the repository
 
 ```bash
-git clone https://github.com/sun0225SUN/cyc.git
-cd cyc
+git clone https://github.com/sun0225SUN/cyc.earth.git
+cd cyc.earth
 ```
 
 2. Create `.env.local` in the repository root and set the variables from [Getting Started](#-getting-started).
@@ -163,4 +168,4 @@ Commit titles follow `:emoji: type(scope): subject`, for example `:sparkles: fea
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=sun0225SUN/cyc&type=Date)](https://www.star-history.com/#sun0225SUN/cyc&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=sun0225SUN/cyc.earth&type=Date)](https://www.star-history.com/#sun0225SUN/cyc.earth&Date)

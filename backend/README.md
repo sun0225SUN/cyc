@@ -38,4 +38,4 @@ make refresh
 
 The `Refresh rides` Action runs `make refresh` at midnight in Asia/Shanghai and commits `data/activities.json` when it changes. Set `IGPSPORT_PHONE`, `IGPSPORT_PASSWORD`, and an `ACTION_TOKEN` that can push `main`. You can also run the workflow by hand.
 
-The license is the same as cyc: GPL-3.0-only.
+The license is the same as cyc.earth: GPL-3.0-only.

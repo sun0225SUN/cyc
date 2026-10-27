@@ -87,6 +87,20 @@ export function rideMapStylePreview(
   return `https://api.mapbox.com/styles/v1/${path}/static/${longitude.toFixed(4)},${latitude.toFixed(4)},12,0/80x80@2x?access_token=${token}&logo=false&attribution=false`
 }
 
+export function preloadRideMapStylePreviews(
+  token: string,
+  center: [number, number],
+  ids: readonly RideMapStyleId[] = rideMapStyleIds,
+) {
+  if (!token) return
+  for (const id of ids) {
+    const url = rideMapStylePreview(id, token, center)
+    if (!url) continue
+    const image = new Image()
+    image.src = url
+  }
+}
+
 export function mapboxToken() {
   return process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? ''
 }

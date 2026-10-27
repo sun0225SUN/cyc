@@ -11,7 +11,12 @@ import {
   useState,
 } from 'react'
 import type { Activity } from '@/entities/activity'
-import { mapboxToken, type RideMapStyleId } from '@/shared/config/mapbox'
+import {
+  mapboxToken,
+  preloadRideMapStylePreviews,
+  type RideMapStyleId,
+  rideMapStyleIds,
+} from '@/shared/config/mapbox'
 import { appearanceFromDocument } from '@/shared/config/theme'
 import { useThemeAppearance } from '@/shared/lib/use-theme-appearance'
 import {
@@ -67,6 +72,14 @@ export function HomeDeck({
     return [120.15, 30.28]
   }, [activities])
   const { query, setQuery } = useHomeQuery()
+
+  useEffect(() => {
+    preloadRideMapStylePreviews(
+      token,
+      mapCenter,
+      rideMapStyleIds.filter((id) => id !== 'privacy'),
+    )
+  }, [token, mapCenter])
   const [detail, setDetail] = useState<{
     activity: Activity
     occurrences: Activity[]

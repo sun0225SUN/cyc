@@ -2,7 +2,7 @@
 
 English | [简体中文](./README_zh.md)
 
-Download original FIT files from iGPSPORT, parse them into SQLite, then export JSON for the home map. The download script is `igpsport/data_sync.py`, the parser is `igpsport/fit_data_parse.py`, and the exporter is `shared/export_db_to_json.py`. Strava uses `strava/data_sync.py` and `strava/activity_data_parse.py`. The two crawlers stay separate. GPX / TCX are not implemented yet.
+Download original FIT files from iGPSPORT, parse them into SQLite, then export JSON for the home map. The download script is `igpsport/data_sync.py`, the parser is `igpsport/fit_data_parse.py`, and the exporter is `shared/export_db_to_json.py`. Strava uses `strava/data_sync.py` and `strava/strava_data_parse.py`. The two crawlers stay separate. GPX / TCX are not implemented yet.
 
 It signs in at `prod.zh.igpsport.com`, lists activities page by page, then calls `getDownloadUrl`. The file body comes from the signed URL and does not carry the login token.
 

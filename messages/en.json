@@ -63,6 +63,7 @@
     "showLapMarkers": "Mileage markers",
     "showStartEnd": "Start and end",
     "colorBySpeed": "Color track by speed",
+    "colorByAverageSpeed": "Color track by average speed",
     "slow": "Slow",
     "fast": "Fast",
     "resizeSheet": "Drag to resize",

@@ -10,6 +10,7 @@ import {
   activityToFeature,
   type RideFeatureCollection,
   type RideMapData,
+  simplifyTrack,
 } from '@/entities/activity'
 import {
   type MapAppearance,
@@ -17,6 +18,7 @@ import {
   type RideMapStyleId,
   rideMapStyle,
 } from '@/shared/config/mapbox'
+import { speedLineColor } from '@/shared/config/speed-color'
 import { accentColor, appearanceFromDocument } from '@/shared/config/theme'
 import { useThemeAppearance } from '@/shared/lib/use-theme-appearance'
 import { MapToolbar } from './map-toolbar'
@@ -30,15 +32,9 @@ export type RideMapCamera = {
   resetNorth: () => void
 }
 
-export type RideSpeedLine = {
-  id: number
-  coordinates: [number, number][]
-  stops: Array<number | string>
-}
-
 const RIDE_LINE = 4
 const RIDE_LINE_HOVER = 6
-const RIDE_DRAW_CHUNK = 100
+const OVERVIEW_SPACING = 0.001
 
 type RideMapProps = {
   activities: Activity[]
@@ -49,7 +45,6 @@ type RideMapProps = {
   onCameraReady?: (camera: RideMapCamera | null) => void
   colorBySpeed?: boolean
   styleId?: RideMapStyleId
-  speedLines?: RideSpeedLine[]
 }
 
 export function RideMap({
@@ -61,7 +56,6 @@ export function RideMap({
   onCameraReady,
   colorBySpeed = false,
   styleId = 'dark',
-  speedLines = [],
 }: RideMapProps) {
   const t = useTranslations('map')
   const appearance = useThemeAppearance()
@@ -77,20 +71,10 @@ export function RideMap({
   const [bearing, setBearing] = useState(0)
   const colorBySpeedRef = useRef(colorBySpeed)
   colorBySpeedRef.current = colorBySpeed
-  const speedLinesRef = useRef(speedLines)
-  speedLinesRef.current = speedLines
   const styleIdRef = useRef(styleId)
   styleIdRef.current = styleId
   const activitiesRef = useRef(activities)
   activitiesRef.current = activities
-  const rideDrawRef = useRef<{ gen: number; frame: number | null }>({
-    gen: 0,
-    frame: null,
-  })
-  const speedDrawRef = useRef<{ gen: number; frame: number | null }>({
-    gen: 0,
-    frame: null,
-  })
   useEffect(() => {
     const container = containerRef.current
     if (!container || !token) return
@@ -159,18 +143,10 @@ export function RideMap({
       paintSpace(map, theme)
       queueRideTracks(
         map,
-        rideDrawRef,
         activitiesRef.current,
         accentColor(theme),
         colorBySpeedRef.current,
         (bounds) => frameOnce(bounds),
-      )
-      queueSpeedLines(
-        map,
-        speedDrawRef,
-        speedLinesRef.current,
-        false,
-        colorBySpeedRef.current,
       )
     })
     mapRef.current = map
@@ -180,8 +156,6 @@ export function RideMap({
       if (transitionTimer.current !== null) {
         window.clearTimeout(transitionTimer.current)
       }
-      cancelDrawQueue(rideDrawRef)
-      cancelDrawQueue(speedDrawRef)
       setMapReady(false)
       languageControlRef.current = null
       map.remove()
@@ -294,7 +268,6 @@ export function RideMap({
     if (!map || !mapReady) return
     queueRideTracks(
       map,
-      rideDrawRef,
       activities,
       accentColor(appearanceFromDocument()),
       colorBySpeedRef.current,
@@ -303,21 +276,14 @@ export function RideMap({
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !mapReady) return
-    queueSpeedLines(map, speedDrawRef, speedLines, false, colorBySpeed)
-    if (map.getLayer('rides')) {
-      map.setPaintProperty(
-        'rides',
-        'line-opacity',
-        rideLineOpacity(colorBySpeed),
-      )
-      map.setPaintProperty(
-        'rides',
-        'line-color',
-        accentColor(appearance ?? 'dark'),
-      )
-    }
-  }, [appearance, colorBySpeed, mapReady, speedLines])
+    if (!map || !mapReady || !map.getLayer('rides')) return
+    map.setPaintProperty(
+      'rides',
+      'line-color',
+      rideLineColor(accentColor(appearance ?? 'dark'), colorBySpeed),
+    )
+    map.setPaintProperty('rides', 'line-opacity', rideLineOpacity(false))
+  }, [appearance, colorBySpeed, mapReady])
 
   return (
     <div className='ride-map relative h-svh w-full bg-transparent'>
@@ -403,17 +369,24 @@ function rideLineOpacity(hide: boolean) {
   return hide ? 0 : 0.9
 }
 
+function rideLineColor(fallback: string, colorBySpeed: boolean) {
+  return speedLineColor(fallback, colorBySpeed) as
+    | string
+    | mapboxgl.ExpressionSpecification
+}
+
 function drawRides(
   map: mapboxgl.Map,
   mapData: RideMapData,
   color: string,
-  hide: boolean,
+  colorBySpeed: boolean,
 ) {
+  const lineColor = rideLineColor(color, colorBySpeed)
   const existing = map.getSource('rides')
   if (existing?.type === 'geojson') {
     existing.setData(mapData.geojson)
-    map.setPaintProperty('rides', 'line-color', color)
-    map.setPaintProperty('rides', 'line-opacity', rideLineOpacity(hide))
+    map.setPaintProperty('rides', 'line-color', lineColor)
+    map.setPaintProperty('rides', 'line-opacity', rideLineOpacity(false))
     return
   }
   map.addSource('rides', { type: 'geojson', data: mapData.geojson })
@@ -422,7 +395,7 @@ function drawRides(
     type: 'line',
     source: 'rides',
     layout: { 'line-join': 'round', 'line-cap': 'round' },
-    paint: { 'line-color': color, 'line-width': 14, 'line-opacity': 0 },
+    paint: { 'line-color': lineColor, 'line-width': 14, 'line-opacity': 0 },
   })
   map.addLayer({
     id: 'rides',
@@ -430,199 +403,59 @@ function drawRides(
     source: 'rides',
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': color,
+      'line-color': lineColor,
       'line-width': [
         'case',
         ['boolean', ['feature-state', 'hover'], false],
         RIDE_LINE_HOVER,
         RIDE_LINE,
       ],
-      'line-width-transition': { duration: 150 },
-      'line-opacity': rideLineOpacity(hide),
+      'line-opacity': rideLineOpacity(false),
     },
   })
 }
 
-type DrawQueueState = {
-  current: { gen: number; frame: number | null }
-}
-
-function cancelDrawQueue(state: DrawQueueState) {
-  state.current.gen += 1
-  if (state.current.frame == null) return
-  cancelAnimationFrame(state.current.frame)
-  state.current.frame = null
-}
-
 function queueRideTracks(
   map: mapboxgl.Map,
-  state: DrawQueueState,
   activities: Activity[],
   color: string,
-  hide: boolean,
+  colorBySpeed: boolean,
   onBounds?: (bounds: RideMapData['bounds']) => void,
 ) {
-  cancelDrawQueue(state)
-  const gen = state.current.gen
-  const ordered = activitiesNewestFirst(activities)
+  if (!styleReady(map)) return
   const features: RideFeatureCollection['features'] = []
   let west = Number.POSITIVE_INFINITY
   let south = Number.POSITIVE_INFINITY
   let east = Number.NEGATIVE_INFINITY
   let north = Number.NEGATIVE_INFINITY
-  let offset = 0
-  const step = () => {
-    if (state.current.gen !== gen || !styleReady(map)) return
-    const slice = ordered.slice(offset, offset + RIDE_DRAW_CHUNK)
-    for (const activity of slice) {
-      const feature = activityToFeature(activity)
-      if (!feature) continue
-      features.push(feature)
-      for (const [longitude, latitude] of feature.geometry.coordinates) {
-        west = Math.min(west, longitude)
-        south = Math.min(south, latitude)
-        east = Math.max(east, longitude)
-        north = Math.max(north, latitude)
-      }
-    }
-    offset += slice.length
-    const bounds =
-      features.length === 0
-        ? null
-        : ([
-            [west, south],
-            [east, north],
-          ] as RideMapData['bounds'])
-    drawRides(
-      map,
-      {
-        geojson: { type: 'FeatureCollection', features: features.slice() },
-        bounds,
-      },
-      color,
-      hide,
+  for (const activity of activitiesNewestFirst(activities)) {
+    const feature = activityToFeature(activity)
+    if (!feature) continue
+    feature.geometry.coordinates = simplifyTrack(
+      feature.geometry.coordinates,
+      OVERVIEW_SPACING,
     )
-    onBounds?.(bounds)
-    if (offset < ordered.length) {
-      state.current.frame = requestAnimationFrame(() => {
-        state.current.frame = null
-        if (state.current.gen !== gen) return
-        step()
-      })
+    if (feature.geometry.coordinates.length < 2) continue
+    features.push(feature)
+    for (const [longitude, latitude] of feature.geometry.coordinates) {
+      west = Math.min(west, longitude)
+      south = Math.min(south, latitude)
+      east = Math.max(east, longitude)
+      north = Math.max(north, latitude)
     }
   }
-  step()
-}
-
-function queueSpeedLines(
-  map: mapboxgl.Map,
-  state: DrawQueueState,
-  lines: RideSpeedLine[],
-  slotted: boolean,
-  visible: boolean,
-) {
-  cancelDrawQueue(state)
-  const gen = state.current.gen
-  drawSpeedLines(map, lines, slotted, visible, (next) => {
-    if (state.current.gen !== gen) return
-    state.current.frame = requestAnimationFrame(() => {
-      state.current.frame = null
-      if (state.current.gen !== gen) return
-      next()
-    })
-  })
-}
-
-function speedLayerBeforeId(
-  map: mapboxgl.Map,
-  id: number,
-  newestFirstIds: number[],
-) {
-  const index = newestFirstIds.indexOf(id)
-  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
-    const newer = newestFirstIds[cursor]
-    if (newer == null) continue
-    const layerId = `ride-speed-${newer}`
-    if (map.getLayer(layerId)) return layerId
-  }
-}
-
-function drawSpeedLines(
-  map: mapboxgl.Map,
-  lines: RideSpeedLine[],
-  slotted: boolean,
-  visible: boolean,
-  schedule: (next: () => void) => void,
-) {
-  if (!styleReady(map)) return
-  const keep = new Set(lines.map((line) => line.id))
-  for (const layer of map.getStyle()?.layers ?? []) {
-    if (!layer.id.startsWith('ride-speed-')) continue
-    const id = Number(layer.id.slice('ride-speed-'.length))
-    if (keep.has(id)) continue
-    map.removeLayer(layer.id)
-    const source = `ride-speed-${id}`
-    if (map.getSource(source)) map.removeSource(source)
-  }
-  const newestFirstIds = lines.map((line) => line.id)
-  let offset = 0
-  const step = () => {
-    const slice = lines.slice(offset, offset + RIDE_DRAW_CHUNK)
-    for (const line of slice) {
-      upsertSpeedLine(map, line, newestFirstIds, slotted, visible)
-    }
-    offset += slice.length
-    if (offset < lines.length) schedule(step)
-  }
-  step()
-}
-
-function upsertSpeedLine(
-  map: mapboxgl.Map,
-  line: RideSpeedLine,
-  newestFirstIds: number[],
-  slotted: boolean,
-  visible: boolean,
-) {
-  const sourceId = `ride-speed-${line.id}`
-  const layerId = `ride-speed-${line.id}`
-  const data: GeoJSON.Feature<GeoJSON.LineString> = {
-    type: 'Feature',
-    properties: { id: line.id },
-    geometry: { type: 'LineString', coordinates: line.coordinates },
-  }
-  const source = map.getSource(sourceId)
-  if (source && source.type === 'geojson') source.setData(data)
-  else map.addSource(sourceId, { type: 'geojson', data, lineMetrics: true })
-  const gradient: mapboxgl.ExpressionSpecification = [
-    'interpolate',
-    ['linear'],
-    ['line-progress'],
-    ...line.stops,
-  ]
-  if (!map.getLayer(layerId)) {
-    const beforeId = speedLayerBeforeId(map, line.id, newestFirstIds)
-    const layer = {
-      id: layerId,
-      type: 'line' as const,
-      source: sourceId,
-      ...(slotted ? { slot: 'top' as const } : {}),
-      layout: { 'line-join': 'round' as const, 'line-cap': 'round' as const },
-      paint: {
-        'line-width': RIDE_LINE,
-        'line-width-transition': { duration: 150 },
-        'line-opacity': 0.9,
-        'line-gradient': gradient,
-      },
-    }
-    if (beforeId) map.addLayer(layer, beforeId)
-    else map.addLayer(layer)
-  } else {
-    map.setPaintProperty(layerId, 'line-gradient', gradient)
-  }
-  map.setLayoutProperty(
-    layerId,
-    'visibility',
-    visible && line.stops.length >= 4 ? 'visible' : 'none',
+  const bounds =
+    features.length === 0
+      ? null
+      : ([
+          [west, south],
+          [east, north],
+        ] as RideMapData['bounds'])
+  drawRides(
+    map,
+    { geojson: { type: 'FeatureCollection', features }, bounds },
+    color,
+    colorBySpeed,
   )
+  onBounds?.(bounds)
 }

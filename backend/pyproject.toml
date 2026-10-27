@@ -16,7 +16,7 @@ dependencies = [
 igpsport-sync = "igpsport.data_sync:main"
 fit-parse = "igpsport.fit_data_parse:main"
 strava-sync = "strava.data_sync:main"
-strava-parse = "strava.activity_data_parse:main"
+strava-parse = "strava.strava_data_parse:main"
 export-activities = "shared.export_db_to_json:main"
 
 [tool.hatch.build.targets.wheel]

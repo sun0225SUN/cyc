@@ -63,6 +63,7 @@
     "showLapMarkers": "显示里程标记",
     "showStartEnd": "显示起点终点",
     "colorBySpeed": "轨迹颜色对应速度",
+    "colorByAverageSpeed": "轨迹颜色对应平均速度",
     "slow": "慢",
     "fast": "快",
     "resizeSheet": "拖拽调整高度",

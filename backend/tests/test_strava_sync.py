@@ -6,7 +6,6 @@ import httpx
 import pytest
 
 from igpsport.fit_data_parse import Activity, connect
-from strava.activity_data_parse import activity_from_payload, import_rides
 from strava.data_sync import (
     _REQUEST_INTERVAL,
     Strava,
@@ -15,6 +14,7 @@ from strava.data_sync import (
     main,
     sync_rides,
 )
+from strava.strava_data_parse import activity_from_payload, import_rides
 
 
 def client(

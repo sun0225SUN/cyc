@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-从 iGPSPORT 迹驰下载原始 FIT 文件，解析进 SQLite，再导出给首页地图。下载脚本是 `igpsport/data_sync.py`，解析脚本是 `igpsport/fit_data_parse.py`，导出脚本是 `shared/export_db_to_json.py`。Strava 用 `strava/data_sync.py` 和 `strava/activity_data_parse.py`。两套爬虫各自独立。GPX / TCX 还没做。
+从 iGPSPORT 迹驰下载原始 FIT 文件，解析进 SQLite，再导出给首页地图。下载脚本是 `igpsport/data_sync.py`，解析脚本是 `igpsport/fit_data_parse.py`，导出脚本是 `shared/export_db_to_json.py`。Strava 用 `strava/data_sync.py` 和 `strava/strava_data_parse.py`。两套爬虫各自独立。GPX / TCX 还没做。
 
 登录 `prod.zh.igpsport.com`，按页读取活动，再请求 `getDownloadUrl`。文件本体从签名 URL 下载，不带登录 Token。
 

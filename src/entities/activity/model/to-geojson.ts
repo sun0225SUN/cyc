@@ -18,6 +18,31 @@ export type RideMapData = {
   bounds: LngLatBounds | null
 }
 
+/** Drop points that sit on top of the previous kept point at overview zoom. */
+export function simplifyTrack(
+  coordinates: [number, number][],
+  spacing: number,
+): [number, number][] {
+  const first = coordinates[0]
+  const last = coordinates[coordinates.length - 1]
+  if (!first || !last || coordinates.length < 3 || spacing <= 0) {
+    return coordinates
+  }
+  const kept: [number, number][] = [first]
+  let lastLng = first[0]
+  let lastLat = first[1]
+  for (let index = 1; index < coordinates.length - 1; index += 1) {
+    const point = coordinates[index]
+    if (!point) continue
+    if (Math.hypot(point[0] - lastLng, point[1] - lastLat) < spacing) continue
+    kept.push(point)
+    lastLng = point[0]
+    lastLat = point[1]
+  }
+  kept.push(last)
+  return kept
+}
+
 export function activityToFeature(
   activity: Activity,
 ): RideFeatureCollection['features'][number] | null {

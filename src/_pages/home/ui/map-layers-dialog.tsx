@@ -65,7 +65,7 @@ export function MapLayersDialog({
         />
         <div className='mt-8'>
           <LayerSwitch
-            label={t('colorBySpeed')}
+            label={t('colorByAverageSpeed')}
             checked={colorBySpeed}
             onCheckedChange={onColorBySpeed}
             event='map-speed-color'

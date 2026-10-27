@@ -23,4 +23,5 @@ export {
   type LngLatBounds,
   type RideFeatureCollection,
   type RideMapData,
+  simplifyTrack,
 } from './model/to-geojson'

@@ -10,12 +10,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import {
-  type Activity,
-  privacyCut,
-  type RideProfile,
-} from '@/entities/activity'
-import { loadRideProfiles } from '@/entities/activity/api/load-ride-profiles'
+import type { Activity } from '@/entities/activity'
 import { mapboxToken, type RideMapStyleId } from '@/shared/config/mapbox'
 import { appearanceFromDocument } from '@/shared/config/theme'
 import { useThemeAppearance } from '@/shared/lib/use-theme-appearance'
@@ -23,16 +18,9 @@ import {
   MapCameraBar,
   RideMap,
   type RideMapCamera,
-  type RideSpeedLine,
   Starfield,
 } from '@/widgets/ride-map'
-import { routeCoordinates, routeDistances } from '../model/lap-route'
-import {
-  nextRideBatchIds,
-  RIDE_MAP_BATCH,
-  rideIdsNewestFirst,
-} from '../model/ride-batch'
-import { speedLineStops } from '../model/speed-route'
+import { routeCoordinates } from '../model/lap-route'
 import { useHomeQuery } from '../model/use-home-query'
 import { MapLayersDialog } from './map-layers-dialog'
 import { PageSwitch } from './page-switch'
@@ -42,7 +30,6 @@ import { RideExplorer } from './ride-explorer'
 type HomeDeckProps = {
   activities: Activity[]
   missingData: boolean
-  rideProfiles: Record<number, RideProfile>
   locale: string
   brand: ReactNode
 }
@@ -50,7 +37,6 @@ type HomeDeckProps = {
 export function HomeDeck({
   activities,
   missingData,
-  rideProfiles: initialRideProfiles,
   locale,
   brand,
 }: HomeDeckProps) {
@@ -63,11 +49,6 @@ export function HomeDeck({
     appearanceFromDocument() === 'dark' ? 'dark' : 'light',
   )
   const appearance = useThemeAppearance()
-  const [rideProfiles, setRideProfiles] = useState(initialRideProfiles)
-  const rideIds = useMemo(() => rideIdsNewestFirst(activities), [activities])
-  const [rideCursor, setRideCursor] = useState(
-    Math.min(RIDE_MAP_BATCH, rideIds.length),
-  )
   const tMap = useTranslations('map')
   const tRides = useTranslations('rides')
   const token = mapboxToken()
@@ -85,47 +66,6 @@ export function HomeDeck({
     }
     return [120.15, 30.28]
   }, [activities])
-  const activitiesById = useMemo(
-    () => new Map(activities.map((activity) => [activity.run_id, activity])),
-    [activities],
-  )
-  const speedLines = useMemo<RideSpeedLine[]>(() => {
-    return rideIds.flatMap((id) => {
-      const activity = activitiesById.get(id)
-      const profile = rideProfiles[id]
-      if (!activity || !profile) return []
-      const coordinates = routeCoordinates(activity.summary_polyline)
-      const cut = privacyCut(routeDistances(coordinates).at(-1) ?? 0)
-      const stops = speedLineStops(
-        coordinates,
-        profile.distance,
-        profile.speed,
-        cut.originMeters > 0
-          ? {
-              origin: cut.originMeters,
-              routeTotal: cut.totalMeters,
-            }
-          : undefined,
-      )
-      if (coordinates.length < 2 || stops.length < 4) return []
-      return [{ id, coordinates, stops }]
-    })
-  }, [activitiesById, rideIds, rideProfiles])
-
-  useEffect(() => {
-    if (rideCursor >= rideIds.length) return
-    const ids = nextRideBatchIds(rideIds, rideCursor)
-    if (ids.length === 0) return
-    let cancelled = false
-    void loadRideProfiles(ids).then((next) => {
-      if (cancelled) return
-      setRideProfiles((current) => ({ ...current, ...next }))
-      setRideCursor((current) => current + ids.length)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [rideCursor, rideIds])
   const { query, setQuery } = useHomeQuery()
   const [detail, setDetail] = useState<{
     activity: Activity
@@ -246,7 +186,6 @@ export function HomeDeck({
               onCameraReady={setCamera}
               colorBySpeed={colorBySpeed}
               styleId={styleId}
-              speedLines={speedLines}
             />
             {missingData ? (
               <div

@@ -1,7 +1,7 @@
 import { encode } from '@mapbox/polyline'
 import { expect, test } from 'vitest'
 import type { Activity } from './activity'
-import { activitiesToGeoJson } from './to-geojson'
+import { activitiesToGeoJson, simplifyTrack } from './to-geojson'
 
 function activity(polyline: string, id = 1): Activity {
   return {
@@ -21,6 +21,21 @@ function activity(polyline: string, id = 1): Activity {
     streak: 1,
   }
 }
+
+test('keeps the ends of a track and drops points that have not moved', () => {
+  const coordinates: [number, number][] = [
+    [0, 0],
+    [0.0001, 0],
+    [0.01, 0],
+    [0.02, 0],
+  ]
+
+  expect(simplifyTrack(coordinates, 0.005)).toEqual([
+    [0, 0],
+    [0.01, 0],
+    [0.02, 0],
+  ])
+})
 
 test('decodes polylines into mapbox lines and bounds', () => {
   const encoded = encode([

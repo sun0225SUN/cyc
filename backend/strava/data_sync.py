@@ -209,7 +209,9 @@ class Strava:
                 continue
             self._note_rate_limit(response)
             return response
-        raise StravaError("Strava request failed") from last_error
+        raise StravaError(
+            f"Strava request failed: {_transport_detail(last_error)}"
+        ) from last_error
 
     def _note_rate_limit(self, response: httpx.Response) -> None:
         for _used_15, _limit_15, used_day, limit_day in _rate_windows(response):
@@ -242,6 +244,15 @@ def _rate_windows(response: httpx.Response) -> list[tuple[int, int, int, int]]:
             continue
         windows.append((used_15, limit_15, used_day, limit_day))
     return windows
+
+
+def _transport_detail(error: Exception | None) -> str:
+    if error is None:
+        return "the connection failed"
+    request = getattr(error, "request", None)
+    url = getattr(request, "url", None)
+    target = f" {url}" if url else ""
+    return f"{error.__class__.__name__}{target}: {error}"
 
 
 def _warn_rate_limit(message: str) -> None:
@@ -318,6 +329,9 @@ def sync_rides(
                 break
     except StravaRateLimit as exc:
         rate_limit = str(exc)
+    except StravaError as exc:
+        failed.append(("list", str(exc)))
+        logger.warning("stopped: %s", exc)
     return downloaded, skipped, failed, rate_limit
 
 

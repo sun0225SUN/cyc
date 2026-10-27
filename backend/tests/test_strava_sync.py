@@ -244,6 +244,20 @@ def test_sync_stops_when_the_daily_limit_is_exhausted(tmp_path: Path) -> None:
     assert "429" in rate_limit
 
 
+def test_transport_error_names_the_cause() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection reset", request=request)
+
+    strava = client(handler)
+
+    with pytest.raises(StravaError, match="connection reset") as exc_info:
+        strava._get("/athlete")
+
+    message = str(exc_info.value)
+    assert "ConnectError" in message
+    assert "/athlete" in message
+
+
 def test_429_stops_without_retrying_and_keeps_saved_rides(tmp_path: Path) -> None:
     calls = {"streams": 0}
 

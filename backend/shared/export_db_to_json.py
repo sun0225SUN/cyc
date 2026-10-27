@@ -7,7 +7,6 @@ from pathlib import Path
 
 _BACKEND_DIR = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _BACKEND_DIR.parent
-_DEFAULT_DB = _BACKEND_DIR / "data" / "activities.db"
 _DEFAULT_OUTPUT = _REPO_ROOT / "data" / "activities.json"
 _STREAM_LIMIT = 1000
 
@@ -70,7 +69,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Export activities from SQLite to JSON."
     )
-    parser.add_argument("--db", default=str(_DEFAULT_DB), help="SQLite database")
+    parser.add_argument(
+        "--db",
+        required=True,
+        help="SQLite database, for example data/igpsport.db or data/strava.db",
+    )
     parser.add_argument(
         "--output",
         default=str(_DEFAULT_OUTPUT),

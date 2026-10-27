@@ -226,7 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--output",
         default=None,
-        help="Directory for FIT files. Defaults to ACTIVITY_DATA_DIR or data/raw",
+        help="Directory for FIT files. Defaults to ACTIVITY_DATA_DIR or data/igpsport",
     )
     parser.add_argument(
         "--limit",
@@ -278,7 +278,7 @@ def _settings(
     output_dir = (
         Path(output_value.strip())
         if output_value and output_value.strip()
-        else Path("data/raw")
+        else Path("data/igpsport")
     )
     return phone, password, access_token, output_dir, args.limit
 

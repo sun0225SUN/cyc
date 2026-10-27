@@ -107,7 +107,8 @@ bun run test
 cd backend
 cp .env.example .env
 # 填写 IGPSPORT_PHONE 和 IGPSPORT_PASSWORD
-make refresh
+# Strava 骑行还要填 STRAVA_CLIENT_ID、STRAVA_CLIENT_SECRET、STRAVA_REFRESH_TOKEN
+make refresh igpsport
 ```
 
 ```bash
@@ -115,7 +116,7 @@ make -C backend check
 make -C backend test
 ```
 
-`Refresh rides` Action 会在东八区每天 0 点跑 `make refresh`，`data/activities.json` 有变化就提交到 `main`。需要仓库 Secrets：`IGPSPORT_PHONE`、`IGPSPORT_PASSWORD`，以及能推 `main` 的 `ACTION_TOKEN`。也可以在 Actions 里手动触发。
+`Refresh data` Action 会在东八区每天 0 点跑，有变化就提交导出的 JSON。仓库变量 `DATA_SOURCE`、仓库 Secrets，以及 Strava 三个密钥的配法见 [docs/refresh-data.zh.md](docs/refresh-data.zh.md)。
 
 更细的说明见 [`backend/README_zh.md`](backend/README_zh.md)。英文：[`backend/README.md`](backend/README.md)。
 

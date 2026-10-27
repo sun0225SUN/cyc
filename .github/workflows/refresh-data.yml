@@ -1,0 +1,131 @@
+name: Refresh Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 数据来源
+        required: true
+        type: choice
+        options:
+          - igpsport
+          - strava
+      rebuild_from_scratch:
+        description: Ignore downloaded rides cache for this run
+        type: boolean
+        default: false
+      delete_cache:
+        description: Delete downloaded rides cache from GitHub Actions
+        type: boolean
+        default: false
+  schedule:
+    # 00:00 Asia/Shanghai. GitHub cron is UTC; China has no DST.
+    # A schedule has no workflow input. It reads the DATA_SOURCE variable.
+    - cron: "0 16 * * *"
+
+concurrency:
+  group: refresh-data-${{ github.event.inputs.source || vars.DATA_SOURCE || 'unset' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      # Manual runs use the required input. The nightly schedule uses the variable.
+      DATA_SOURCE: ${{ github.event.inputs.source || vars.DATA_SOURCE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.ACTION_TOKEN }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.2
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          working-directory: backend
+
+      - name: Delete downloaded rides cache
+        if: ${{ inputs.delete_cache }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          deleted=0
+          for prefix in data- rides-v2-; do
+            while :; do
+              ids="$(gh cache list --key "$prefix" --limit 100 --json id --jq '.[].id')"
+              if [ -z "$ids" ]; then
+                break
+              fi
+              for id in $ids; do
+                gh cache delete "$id"
+                deleted=$((deleted + 1))
+              done
+            done
+          done
+          if [ "$deleted" -eq 0 ]; then
+            echo "No rides cache to delete."
+          else
+            echo "Deleted $deleted rides cache(s)."
+          fi
+
+      - name: Restore downloaded rides
+        if: ${{ !inputs.rebuild_from_scratch }}
+        uses: actions/cache@v6
+        with:
+          path: |
+            backend/data/igpsport
+            backend/data/igpsport.db
+            backend/data/strava
+            backend/data/strava.db
+          # One cache per source. Bump the prefix after a destructive data change.
+          key: data-${{ env.DATA_SOURCE }}-${{ github.run_id }}
+          restore-keys: |
+            data-${{ env.DATA_SOURCE }}-
+
+      - name: Fetch, parse, and export
+        working-directory: backend
+        env:
+          # Every source reads the variables it needs. Leave the others unset.
+          # If the value of DATA_SOURCE is "igpsport", you need to configure the following keys
+          IGPSPORT_PHONE: ${{ secrets.IGPSPORT_PHONE }}
+          IGPSPORT_PASSWORD: ${{ secrets.IGPSPORT_PASSWORD }}
+          # If the value of DATA_SOURCE is "strava", you need to configure the following keys
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+        run: |
+          set -euo pipefail
+          case "$DATA_SOURCE" in
+            igpsport)
+              if [ -z "${IGPSPORT_ACCESS_TOKEN:-}" ] && { [ -z "${IGPSPORT_PHONE:-}" ] || [ -z "${IGPSPORT_PASSWORD:-}" ]; }; then
+                echo "igpsport needs IGPSPORT_ACCESS_TOKEN, or both IGPSPORT_PHONE and IGPSPORT_PASSWORD." >&2
+                exit 1
+              fi
+              ;;
+            strava)
+              if [ -z "${STRAVA_CLIENT_ID:-}" ] || [ -z "${STRAVA_CLIENT_SECRET:-}" ] || [ -z "${STRAVA_REFRESH_TOKEN:-}" ]; then
+                echo "strava needs STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, and STRAVA_REFRESH_TOKEN." >&2
+                exit 1
+              fi
+              ;;
+            *)
+              echo "数据来源 must be igpsport or strava, got: ${DATA_SOURCE:-<empty>}." >&2
+              echo "Set the DATA_SOURCE repository variable for the nightly run." >&2
+              exit 1
+              ;;
+          esac
+          make refresh "$DATA_SOURCE"
+
+      - name: Commit activities
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: ":card_file_box: chore(data): refresh ${{ env.DATA_SOURCE }} activities json"
+          file_pattern: data/activities.json data/rides/*.json

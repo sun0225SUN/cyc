@@ -13,15 +13,14 @@ dependencies = [
 ]
 
 [project.scripts]
-igpsport-sync = "igpsport_sync:main"
-fit-parse = "fit_parse:main"
-export-activities = "export_activities:main"
+igpsport-sync = "igpsport.data_sync:main"
+fit-parse = "igpsport.fit_data_parse:main"
+strava-sync = "strava.data_sync:main"
+strava-parse = "strava.activity_data_parse:main"
+export-activities = "shared.export_db_to_json:main"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src/igpsport_sync.py", "src/fit_parse.py", "src/export_activities.py"]
-
-[tool.hatch.build.targets.wheel.sources]
-"src" = ""
+packages = ["igpsport", "strava", "shared"]
 
 [build-system]
 requires = ["hatchling"]
@@ -37,15 +36,15 @@ target-version = ["py312"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-src = ["src", "tests"]
+src = ["igpsport", "strava", "shared", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["export_activities", "fit_parse", "igpsport_sync"]
+known-first-party = ["igpsport", "strava", "shared"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["."]

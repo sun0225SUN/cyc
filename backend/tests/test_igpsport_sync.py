@@ -5,7 +5,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from igpsport_sync import IGPSport, IGPSportError, looks_like_fit, main, sync_fit
+from igpsport.data_sync import IGPSport, IGPSportError, looks_like_fit, main, sync_fit
 
 
 def fit_bytes(payload: bytes = b"records") -> bytes:
@@ -220,7 +220,7 @@ def test_cli_does_not_print_the_password(tmp_path: Path, monkeypatch, capsys) ->
         def download(self, activity_id: str) -> bytes:
             return fit_bytes()
 
-    monkeypatch.setattr("igpsport_sync.IGPSport", Fake)
+    monkeypatch.setattr("igpsport.data_sync.IGPSport", Fake)
     monkeypatch.chdir(tmp_path)
     code = main(
         [

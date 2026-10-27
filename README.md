@@ -107,7 +107,8 @@ Activity files stay in `backend/`. The page reads `data/activities.json`.
 cd backend
 cp .env.example .env
 # set IGPSPORT_PHONE and IGPSPORT_PASSWORD
-make refresh
+# Strava rides also need STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_REFRESH_TOKEN
+make refresh igpsport
 ```
 
 ```bash
@@ -115,7 +116,7 @@ make -C backend check
 make -C backend test
 ```
 
-The `Refresh rides` Action runs `make refresh` at midnight in Asia/Shanghai and commits `data/activities.json` when it changes. Set `IGPSPORT_PHONE`, `IGPSPORT_PASSWORD`, and an `ACTION_TOKEN` that can push `main`. You can also run the workflow by hand.
+The `Refresh data` Action runs at midnight in Asia/Shanghai and commits the exported JSON when it changes. Set the `DATA_SOURCE` repository variable, the repository secrets, and the Strava keys as described in [docs/refresh-data.md](docs/refresh-data.md).
 
 More detail: [`backend/README.md`](backend/README.md). Chinese: [`backend/README_zh.md`](backend/README_zh.md).
 

@@ -159,6 +159,35 @@ def parse_fit(path: Path) -> Activity:
     )
 
 
+def save_activity(connection: sqlite3.Connection, activity: Activity) -> str:
+    """Insert one activity, or fill in a missing record stream.
+
+    Returns ``imported``, ``backfilled``, ``skipped``, or ``conflict``.
+    A row that already came from another source file is left as it is.
+    """
+
+    if not _exists(connection, activity.id):
+        _insert(connection, activity)
+        return "imported"
+    row = connection.execute(
+        "SELECT source_file FROM activities WHERE id = ?",
+        (activity.id,),
+    ).fetchone()
+    source = str(row[0]) if row is not None else ""
+    if source != activity.source_file:
+        return "conflict"
+    if _detail_imported(connection, activity.id):
+        return "skipped"
+    _replace_detail(connection, activity)
+    return "backfilled"
+
+
+def connect(db_path: Path) -> sqlite3.Connection:
+    """Open the activities database and create tables that are missing."""
+
+    return _connect(db_path)
+
+
 def import_fit_files(
     input_dir: Path,
     db_path: Path,
@@ -208,13 +237,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Import FIT files into SQLite.")
     parser.add_argument(
         "--input",
-        default="data/raw",
-        help="Directory of FIT files. Defaults to data/raw",
+        default="data/igpsport",
+        help="Directory of FIT files. Defaults to data/igpsport",
     )
     parser.add_argument(
         "--db",
-        default="data/activities.db",
-        help="SQLite database. Defaults to data/activities.db",
+        default="data/igpsport.db",
+        help="SQLite database. Defaults to data/igpsport.db",
     )
     parser.add_argument(
         "--limit",

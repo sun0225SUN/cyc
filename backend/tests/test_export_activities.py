@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from export_activities import ExportError, _activity_name, export_activities, main
+from shared.export_db_to_json import (
+    ExportError,
+    _activity_name,
+    export_activities,
+    main,
+)
 
 
 def _create_db(path: Path) -> None:

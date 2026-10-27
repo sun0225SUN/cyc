@@ -5,7 +5,7 @@ from pathlib import Path
 import polyline
 import pytest
 
-from fit_parse import (
+from igpsport.fit_data_parse import (
     FitParseError,
     Record,
     _activity_name,
@@ -92,8 +92,10 @@ def test_parse_fit_reads_the_session_and_track(tmp_path: Path, monkeypatch) -> N
             [],
         )
 
-    monkeypatch.setattr("fit_parse.Decoder.read", fake_read)
-    monkeypatch.setattr("fit_parse.Stream.from_file", lambda name: object())
+    monkeypatch.setattr("igpsport.fit_data_parse.Decoder.read", fake_read)
+    monkeypatch.setattr(
+        "igpsport.fit_data_parse.Stream.from_file", lambda name: object()
+    )
     activity = parse_fit(path)
 
     assert activity.id == 42
@@ -150,8 +152,10 @@ def test_running_sport_uses_the_run_label(tmp_path: Path, monkeypatch) -> None:
     def fake_read(self, **kwargs):  # noqa: ARG001
         return ({"session_mesgs": [_session(sport="running")], "record_mesgs": []}, [])
 
-    monkeypatch.setattr("fit_parse.Decoder.read", fake_read)
-    monkeypatch.setattr("fit_parse.Stream.from_file", lambda name: object())
+    monkeypatch.setattr("igpsport.fit_data_parse.Decoder.read", fake_read)
+    monkeypatch.setattr(
+        "igpsport.fit_data_parse.Stream.from_file", lambda name: object()
+    )
 
     assert parse_fit(path).type == "Run"
 
@@ -166,7 +170,7 @@ def test_import_skips_an_id_already_in_the_database(
     second.write_bytes(b"b")
 
     def fake_parse(path: Path):
-        from fit_parse import Activity
+        from igpsport.fit_data_parse import Activity
 
         return Activity(
             id=int(path.stem),
@@ -198,7 +202,7 @@ def test_import_skips_an_id_already_in_the_database(
             ),
         )
 
-    monkeypatch.setattr("fit_parse.parse_fit", fake_parse)
+    monkeypatch.setattr("igpsport.fit_data_parse.parse_fit", fake_parse)
     db = tmp_path / "activities.db"
     imported, backfilled, skipped, failed = import_fit_files(first.parent, db)
     again, backfilled_again, skipped_again, failed_again = import_fit_files(
@@ -282,7 +286,7 @@ def test_import_adds_records_to_an_existing_database(
     (raw / "1.fit").write_bytes(b"a")
 
     def fake_parse(path: Path):
-        from fit_parse import Activity
+        from igpsport.fit_data_parse import Activity
 
         return Activity(
             id=1,
@@ -314,7 +318,7 @@ def test_import_adds_records_to_an_existing_database(
             ),
         )
 
-    monkeypatch.setattr("fit_parse.parse_fit", fake_parse)
+    monkeypatch.setattr("igpsport.fit_data_parse.parse_fit", fake_parse)
     imported, backfilled, skipped, failed = import_fit_files(raw, db)
 
     assert imported == []
@@ -336,7 +340,7 @@ def test_import_backfills_records_for_an_existing_activity(
     (raw / "1.fit").write_bytes(b"a")
 
     def fake_parse(path: Path):
-        from fit_parse import Activity
+        from igpsport.fit_data_parse import Activity
 
         return Activity(
             id=1,
@@ -368,7 +372,7 @@ def test_import_backfills_records_for_an_existing_activity(
             ),
         )
 
-    monkeypatch.setattr("fit_parse.parse_fit", fake_parse)
+    monkeypatch.setattr("igpsport.fit_data_parse.parse_fit", fake_parse)
     db = tmp_path / "activities.db"
     imported, backfilled, skipped, failed = import_fit_files(raw, db)
     assert imported == [1]
@@ -427,7 +431,7 @@ def test_a_bad_file_does_not_stop_the_import(tmp_path: Path, monkeypatch) -> Non
     def fake_parse(path: Path):
         if path.stem == "1":
             raise FitParseError("no session distance")
-        from fit_parse import Activity
+        from igpsport.fit_data_parse import Activity
 
         return Activity(
             id=2,
@@ -448,7 +452,7 @@ def test_a_bad_file_does_not_stop_the_import(tmp_path: Path, monkeypatch) -> Non
             source_file=path.name,
         )
 
-    monkeypatch.setattr("fit_parse.parse_fit", fake_parse)
+    monkeypatch.setattr("igpsport.fit_data_parse.parse_fit", fake_parse)
     imported, backfilled, skipped, failed = import_fit_files(
         raw, tmp_path / "activities.db"
     )
@@ -465,10 +469,10 @@ def test_missing_directory_raises(tmp_path: Path) -> None:
 
 
 def test_cli_reports_the_summary(tmp_path: Path, monkeypatch, capsys) -> None:
-    from fit_parse import main
+    from igpsport.fit_data_parse import main
 
     monkeypatch.setattr(
-        "fit_parse.import_fit_files",
+        "igpsport.fit_data_parse.import_fit_files",
         lambda input_dir, db_path, limit=None: (
             [1],
             [3],
@@ -485,7 +489,7 @@ def test_cli_reports_the_summary(tmp_path: Path, monkeypatch, capsys) -> None:
 
 
 def test_start_without_a_timestamp_uses_the_clock_time() -> None:
-    from fit_parse import _as_utc
+    from igpsport.fit_data_parse import _as_utc
 
     value = datetime(2024, 1, 2, 3, 4, 5)
     assert _as_utc(value) == value.replace(tzinfo=UTC)

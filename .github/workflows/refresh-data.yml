@@ -10,6 +10,21 @@ on:
         options:
           - igpsport
           - strava
+      # Downloaded FIT files, Strava JSON, and the per-source SQLite files
+      # live in the Actions cache. Leave both switches off to resume that
+      # cache and save a new one when the job finishes.
+      #
+      # rebuild_from_scratch only: this run ignores the cache and downloads
+      # from scratch. The old cache stays, and this run does not save a new
+      # one, because the cache step is skipped. The next run restores the
+      # older cache, not this download.
+      #
+      # delete_cache only: delete every saved data- and rides-v2- cache for
+      # both sources, download from scratch, then save this run as the new
+      # cache.
+      #
+      # Both: delete the saved caches, then neither restore nor save. The
+      # next scheduled run downloads from scratch again.
       rebuild_from_scratch:
         description: Ignore downloaded rides cache for this run
         type: boolean

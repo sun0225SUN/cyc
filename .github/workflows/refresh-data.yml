@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       source:
-        description: 数据来源
+        description: Data source
         required: true
         type: choice
         options:
@@ -132,7 +132,7 @@ jobs:
               fi
               ;;
             *)
-              echo "数据来源 must be igpsport or strava, got: ${DATA_SOURCE:-<empty>}." >&2
+              echo "DATA_SOURCE must be igpsport or strava, got: ${DATA_SOURCE:-<empty>}." >&2
               echo "Set the DATA_SOURCE repository variable for the nightly run." >&2
               exit 1
               ;;

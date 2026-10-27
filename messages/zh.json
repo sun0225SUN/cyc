@@ -70,6 +70,9 @@
     "exitFullscreen": "退出全屏"
   },
   "rides": {
+    "missingDataTitle": "骑行数据缺失",
+    "missingDataBody": "仓库根目录还没有 data/activities.json 和 data/rides/。",
+    "missingDataNext": "请按文档先从第三方平台中获取这些数据。",
     "title": "活动",
     "count": "{count} 次骑行",
     "date": "日期",

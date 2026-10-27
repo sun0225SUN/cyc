@@ -17,7 +17,7 @@ export async function generateMetadata() {
 
 export async function HomePage() {
   const locale = await getLocale()
-  const activities = await loadActivities()
+  const { activities, missingData } = await loadActivities()
   const rideProfiles = await loadRideProfiles(
     firstRideBatchIds(rideIdsNewestFirst(activities)),
   )
@@ -25,6 +25,7 @@ export async function HomePage() {
   return (
     <HomeDeck
       activities={activities}
+      missingData={missingData}
       rideProfiles={rideProfiles}
       locale={locale}
       brand={<Brand />}

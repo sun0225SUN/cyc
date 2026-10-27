@@ -1,6 +1,6 @@
 'use client'
 
-import { Layers } from 'lucide-react'
+import { ArrowUpRight, Layers } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import {
   type ReactNode,
@@ -41,6 +41,7 @@ import { RideExplorer } from './ride-explorer'
 
 type HomeDeckProps = {
   activities: Activity[]
+  missingData: boolean
   rideProfiles: Record<number, RideProfile>
   locale: string
   brand: ReactNode
@@ -48,6 +49,7 @@ type HomeDeckProps = {
 
 export function HomeDeck({
   activities,
+  missingData,
   rideProfiles: initialRideProfiles,
   locale,
   brand,
@@ -67,6 +69,7 @@ export function HomeDeck({
     Math.min(RIDE_MAP_BATCH, rideIds.length),
   )
   const tMap = useTranslations('map')
+  const tRides = useTranslations('rides')
   const token = mapboxToken()
 
   useEffect(() => {
@@ -245,6 +248,33 @@ export function HomeDeck({
               styleId={styleId}
               speedLines={speedLines}
             />
+            {missingData ? (
+              <div
+                role='status'
+                className='text-foreground pointer-events-auto absolute top-1/2 left-1/2 z-20 w-[min(36rem,calc(100%-2.5rem))] -translate-x-1/2 -translate-y-1/2 rounded-[2rem] bg-white/20 px-6 py-7 text-center shadow-lg backdrop-blur-md dark:bg-black/20'
+              >
+                <p className='text-3xl leading-none' aria-hidden>
+                  ⚠️
+                </p>
+                <p className='mt-4 text-lg leading-snug font-medium'>
+                  {tRides('missingDataTitle')}
+                </p>
+                <p className='text-foreground/65 mt-2 text-sm leading-6'>
+                  {tRides('missingDataBody')}
+                </p>
+                <a
+                  href={
+                    locale === 'zh'
+                      ? 'https://github.com/sun0225SUN/cyc.earth/blob/main/docs/refresh-data.zh.md'
+                      : 'https://github.com/sun0225SUN/cyc.earth/blob/main/docs/refresh-data.md'
+                  }
+                  className='bg-foreground/10 hover:bg-foreground/15 mt-5 flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left text-sm leading-5'
+                >
+                  <span>{tRides('missingDataNext')}</span>
+                  <ArrowUpRight aria-hidden className='size-3.5 shrink-0' />
+                </a>
+              </div>
+            ) : null}
           </section>
           <section
             data-data-page

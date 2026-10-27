@@ -14,9 +14,25 @@ export async function loadRideProfiles(
   cacheLife('max')
 
   const dir = path.join(process.cwd(), 'data', 'rides')
-  const files = ids
-    ? ids.filter((id) => Number.isInteger(id)).map((id) => `${id}.json`)
-    : (await readdir(dir)).filter((file) => file.endsWith('.json'))
+  let names: string[]
+  if (ids) {
+    names = ids.filter((id) => Number.isInteger(id)).map((id) => `${id}.json`)
+  } else {
+    try {
+      names = await readdir(dir)
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        return {}
+      }
+      throw error
+    }
+  }
+  const files = names.filter((file) => file.endsWith('.json'))
   const next: Record<number, RideProfile> = {}
   await Promise.all(
     files.map(async (file) => {

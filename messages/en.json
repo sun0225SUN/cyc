@@ -70,6 +70,9 @@
     "exitFullscreen": "Exit full screen"
   },
   "rides": {
+    "missingDataTitle": "Ride data is missing",
+    "missingDataBody": "The repository root does not have data/activities.json or data/rides/ yet.",
+    "missingDataNext": "Follow the docs and fetch this data from the third-party platform first.",
     "title": "Activities",
     "count": "{count, plural, one {# ride} other {# rides}}",
     "date": "Date",

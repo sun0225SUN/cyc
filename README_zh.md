@@ -13,6 +13,7 @@
   <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/sun0225SUN/cyc.earth?style=flat">
   <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sun0225SUN/cyc.earth?style=flat">
   <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/sun0225SUN/cyc.earth?style=flat">
+  <a href="https://t.me/guoqidev/3"><img alt="Telegram 群组" src="https://img.shields.io/badge/Telegram-Group-26A5E4?style=flat&logo=telegram&logoColor=white" /></a>
   <img alt="Page views" src="https://komarev.com/ghpvc/?username=cyc&label=Views&color=orange&style=flat" />
 </div>
 
@@ -138,6 +139,10 @@ src/shared/          UI 和配置
 ```
 
 Agent 说明在 [`AGENTS.md`](AGENTS.md) 和 [`docs/agent/`](docs/agent/)。
+
+## 💬 交流
+
+欢迎加入 [Telegram Group](https://t.me/guoqidev/3)，交流 cyc.earth、分享建议，认识更多骑行爱好者。
 
 ## 👥 贡献者
 

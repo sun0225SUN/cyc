@@ -13,6 +13,7 @@
   <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/sun0225SUN/cyc.earth?style=flat">
   <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sun0225SUN/cyc.earth?style=flat">
   <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/sun0225SUN/cyc.earth?style=flat">
+  <a href="https://t.me/guoqidev/3"><img alt="Telegram Group" src="https://img.shields.io/badge/Telegram-Group-26A5E4?style=flat&logo=telegram&logoColor=white" /></a>
   <img alt="Page views" src="https://komarev.com/ghpvc/?username=cyc&label=Views&color=orange&style=flat" />
 </div>
 
@@ -138,6 +139,10 @@ src/shared/          UI kit and config
 ```
 
 Agent notes live in [`AGENTS.md`](AGENTS.md) and [`docs/agent/`](docs/agent/).
+
+## 💬 Community
+
+Join the [Telegram Group](https://t.me/guoqidev/3) to chat about cyc.earth, share feedback, and connect with other cyclists.
 
 ## 👥 Contributors
 
